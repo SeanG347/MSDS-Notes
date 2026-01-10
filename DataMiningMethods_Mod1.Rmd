@@ -1,0 +1,212 @@
+---
+title: "DataMiningMethods_Mod1"
+author: "Sean Guglietti"
+date: "2025-11-25"
+output:
+  pdf_document: default
+---
+
+# Data Mining Methods - Module 1
+
+### Lesson 1 - Technique View
+  - Learning objective: Identify the core functions of data modeling in the data mining pipeline. Apply the Apriori algorithm for frequent itemset mining.
+  - In previous class, we learned the pipeline from Data Understanding to Data Warehousing.
+    - This course focuses on the Data Modeling
+  - Techniques:
+    - Frequent pattern analysis
+      - Might have:
+        - Frequent itemset
+        - Frequent sequence 
+        - Frequent structure
+        - Association rules
+          - Looking at: if A has happened, what is the likelihood of B occuring
+        - Correlation analysis
+          - Looking at: Does B happen because A has happened? Is the relation probabilistic? 
+    - Classification
+      - Classifying something into pre-defined classes
+      - Need training data
+      - Build model to distinguish classes
+    - Clustering 
+      - No predefined classes
+      - Intra-cluster similarity
+      - Inter-cluster dissimilarity
+    - Anomaly Detection
+      - Differ from the norm
+      - Noise, error, fraud, extreme events
+    - Trend and evolution analysis
+      - Changes over time, periodical patterns, anomalies, overall trend.
+
+
+### Lesson 2 - Frequent Pattern Analysis, Apriori Algorithm
+
+  - Origin of FPA is motivated by market analysis (retailers). 
+    - List of transactions (each $T_i$ contains multiple items)
+    - Frequent itemset $X = {x_1, x_2, x_3..., x_k}$
+      - (Minimum) Support: Probability of $T_i$ containing X
+      - Always looking for frequent/regular occurrences
+  - Important notions in Pattern Analysis
+    - Closed pattern X: no super-pattern Y $\supset$ X with the same support
+      - Consider different itemset, is there a superset of X (Y, which has X + another item) with the same support?
+    - Max-pattern X: no super-pattern Y $\supset$ X
+      - Difference is the support
+    - Closed and max pattern example:
+      - Suppose we have two transactions, first contains all 100 items, second contains first 50. Minimum support is 0.5, meaning that because there are two transactions, one of them has to happen (statistically)
+        - Frequent pattern? All item combinations, as all items have occured, thus all patterns are "frequent"
+           - Closed pattern? Transaction 1 has all 100 items, and has occured once, but the second transaction (items 1-50) has occurred twice (once in transaction 1 and once in transaction 2). Because the second transaction has a frequency/support value of 2, it is a distinct closed pattern from the first transaction. 
+           - Max-pattern? Looking at the two closed patterns, the transaction with all 100 items is clearly a super-pattern of the second pattern (the transaction with the first 50), and since max-pattern does not consider support, the max-pattern will be transaction 1 as it is a superpattern of transaction 2.
+  - How do we find Frequent patterns?
+    - Brute force approach (i.e., 100 items):
+      - ${100 \choose 1} + {100 \choose 2} + ... + {100 \choose 100} = 2^{100}- 1$
+        - Ridiculous amounts of possibilities, brute force does not work for any even medium sized dataset
+    - $\textbf{Apriori Algorithm}$
+      - Apriori pruning: If trying to grow pattern, if you know pattern X is infrequent, then any superset of X is also infrequent
+      - Procedure
+        - Scan dataset to get items with frequncies above a certain threshold, these are put into the frequent 1-itemsets (itemsets containing 1 item that are frequent), others are removed as they cannot be frequent. 
+        - Generate candidate (k+1)-itemsets from freq. k-itemsets (note "candidate" itemsets are itemsets that according to the Apriori pruning dogma could be frequent, i.e., do not contain infrequent items from the freq.1-itemsets. If we know item C is infrequent and A is frequent, itemset AC is not a candidate as according to the Apriori pruning idiom, any superset of an infrequent set X is infrequent as well.)
+        - Rescan dataset to remove infreq candidate (k+1) itemsets
+        - Stop when no more freq. or candidate itemsets
+        
+
+### Lesson 3 - Apriori Algorithm Example, Details
+  - Suppose we choose a minimum support = 0.6 (i.e., we need to see it in 60% of transactions for it to be considered frequent), and we have 5 transactions: $T_1$ = (A,B,C,E), $T_2$ = (A,D,E), $T_3$ = (B,C,E), $T_4$ = (B,C,D,E), $T_5$ = (B,D,E). Thus, for an item to be "frequent", it needs to appear in 3 of the 5 transactions. 
+    - Going through, we see that items B, C, D, and E all appear in 3+ transactions, and hence are "frequent" by our minimum support value of 0.6.
+    - So, our 1-freq itemsets are {B}, {C}, {D}, {E}
+      - Our candidate 2-freq itemsets are thus: 
+        - {B,C}, {B,D}, {B,E}, {C,D}, {C,E}, {D,E}
+        - These occur, respectively: 3, 2, 4, 1, 3, 3 times, thus we can prune the itemsets that occur less than 3 times again.
+        - We are left with: {B,C}, {B,E}, {C,E}, {D,E}
+        - Now we go to 3-freq itemsets: {B,C,D}, {B,C,E}, {B,E,D}, {C,E,D}, $\textbf{BUT NOTE! Since {B,D}, and {C,D} are infrequent itemsets, any superset of those are also infrequent, and hence there is actually just one candidate 3-freq itemset: {B,C,E}}$
+        - These occur, respectively: 1, 3, 2, 1 times, thus we again prune the ones with frequency < 3, and are left with just {B,C,E}, and thus just one candidate 4-freq itemset, which is {B,C,E,D}, but that occurs just once, hence we are left with the largest frequent itemset of {B,C,E}
+  - Important details: self-joining of k-itemsets => (k+1)-itemsets
+    - Only join if their first (k-1) items are the same, don't want to generate duplicates
+    - Pruning: remove if subset is not frequent
+    
+        
+### Lesson 4 - Apriori Algorithm Challenges and Improvements
+  - Challenges
+    - Uses multiple scans of the entire dataset which can be very expensive process
+    - Have to generate a huge number of candidates
+    - Support counting of all candidates
+  - Can we make it more efficient?
+    - Partitioning
+      - A freq. itemset must be freq. in at least one partition
+    - Sampling
+      - Sampled subsets are likely to contain freq. itemsets
+    - Transaction reduction
+      - Remove $T_i$ if it doesn't contain any freq. k-itemset
+    - Support counting using hash-tree
+      - Hash tree 
+        - Construct a tree, Have a subset function where 1,4,7 follows left branch, 2,5,8 follows middle branch, and 3,6,9 follows right branch. Once you follow the branches until you get to a leaf, you land on a candidate k-itemset
+          - Once at a leaf node, check candidates, if there's a match you can increase the support count
+      - Key steps
+        - Determine subset function
+        - Take candidate set, use subset function to construct hashtree
+        - Go through dataset, generate k-itemsets, traverse hashtree to check if the itemsets match your leaf nodes
+    - Vertical data format
+      - Horizontal: $T_i = {A,C,E}$
+      - Vertical data format:
+        - t(X) = ${T_2,T_5,T_9}$, t(Y) = {$T_2,T_3,T_5,T_{10}$}
+      - Vertical intersection:
+        - t(XY) = t(X) $\cap$ t(Y) = ${T_2,T_5}$
+      - Similar to search engine
+        - Inverted index, this keyword has occured in these documents
+        
+### Lesson 5 - FP-Growth Algorithm
+  - Limitations of Apriori Algorithm
+    - Multiple scans, candidate generation, support counting
+      - Can we avoid costly candidate generation? (because we generate many non-frequent itemsets)
+  - FP-growth algorithm
+    - Intuition: if d is freq. in database | abc, then abcd is freq.
+      - I.e., if d is frequent in the transactions that contain abc, and if abc is frequent, then abcd is frequent
+      - Grow patterns using local freq. items
+      - Find freq. itemsets without candidate generation
+  - Example:
+    - Scan database, find freq-1 itemsets
+    - Once you've identified the freq-1 itemsets remove the infrequent items
+    - Take frequent items from each dataset and sort it in terms of frequency
+    - Once you have the "sorted" list of frequent items, construct fp tree
+      - The starting level is nothing, next level is the starting items (for example f, and c) and their corresponding frequency
+      - Next level is the amount of times the next character occurs IN THAT SUBSET WHERE IT STARTS WITH F OR C
+        - After constructing the tree, we'll see what k-itemsets are frequent 
+  - Conditional FP-tree
+    - m-conditional pattern base:
+      - m is the item we are conditioning around. It will look at subtrees in which m is contained, and return the frequency of the itemsets that contain m (in the example, fca:2, fcab:1, meaning fcam occurs twice and fcabm occurs once)
+      
+  
+### Lesson 6 - Association Rule
+
+  - Given list of transactions, itemsets X, Y
+  - Association rule: X => Y
+    - Support: P(X $\cup$ Y)
+    - Confidence: P(Y|X)
+    - Where "minimum support and minimum confidence" comes from
+  - Example:
+    - Freq. itemsets: B: 4, E:5
+    - Association rules:
+      - B => E (sup = 4/5, conf = 1.0) (confidence = 1 as E occurs every time B occurs)
+      - E => B (sup = 4/5, conf = 0.8) (confidence = 0.8 as B does not occur in every E occurrence) 
+        
+### Lesson 7 - Correlation
+  - Numerical attributes: correlation coefficient
+  $$r_{a,b} = \frac{\sum_{i=1}^N{a_ib_i} - N\bar{A}\bar{B}}{N\sigma_A\sigma_B}$$
+  - Nominal attributes: chi-square test
+  $$ \chi^2 = \sum_{i=1}^c{\sum_{j=1}^r{\frac{(o_{ij}-e_{ij})^2}{e_{ij}}}}$$
+  - Expected value (assuming independence) 
+    $$e_{ij} = \frac{count(A=a_i)xcount(B=b_j)}{N}$$
+  - Correlation rule:
+    - A => B [support, confidence, correlation]
+      - If A occurs, is B more (or less) likely to occur?
+        - P(B) vs. P(B|A)
+        - Want to see if occurrence of A changes likelihood of B
+      - Measure of dependent/correlated events
+  $$lift(A,B) = \frac{P(A\cup B)}{P(A)P(B)}$$
+    - If lift = 1: independent events
+    - If lift > 1: positive, A and B are more likely to occur than the independent occurences
+    - If lift < 1: negative, co-occurence less likely
+    
+### Lesson 8 - Other Correlation Measures
+  - Null transaction (not A and not B)
+    - Null-variant: Lift, $\chi^2$
+    - Null-invariant: all_conf, max_conf, Kulc, cosine
+    - Imbalance ratio: 
+      $$ IR(A,B) = \frac{|sup(A) - sup(B)|}{sup(A)+sup(B)-sup(A\cup B)}$$ 
+    - Frequent pattern analysis
+      - Can find frequent sequences and structures (not covered here)
+      - Rules: Association, Correlation (probability of B occuring given A, or likelihood of B given A), gradient (shows directional change and scale change if going in one specific direction)
+      - Dimensions, levels: single, multiple
+      - Values: Binary, categorical, quantitative
+        - If continuous numerical attribute, need to discretize into bins for frequent pattern analysis
+      - Metarule-guided mining
+        - Instead of just go and try different rules/patterns, start off with a metarule
+          - Specify what/how many dimensions you are incorporating before the analysis
+        
+### Examples
+  - FP-growth Frequent Pattern Analysis
+    - Go to table, take off non-frequent items
+      - Get list (in example: Z:9, T:7, F:6, X:6)
+      - Go through transactions, list the sorted frequent 1-itemset list:
+        - ZTF, ZTFX, ZT, ZTX, ZFX, T, ZTFX, ZF, ZTX, ZFX
+      - Construct tree
+        - Starting point is empty {}
+          - {Z:9} - left, {T:1} - right
+          - {T:6} - left, {F:3} - right, {X:2} - right-down (following {F:3})
+          - {F:3} - left, {X:2} - right
+          - {X:2} - left-down (following {F:3})
+      - Now we have tree
+    - Monotonic and Anti-monotonic constraints
+      - Range(S.price) >= v (S is an itemset)
+        - Range is difference between max and min. I.e., if max is 100 and min is 5, range is 95.
+        - Monotonic: satisfying the constraint, i.e., if itemset S satisfies, then the superset $S^+$ should also satisfy (that is the definition of monotonic)
+        - If we add an item to the original set S, the range does not change (V <= range(S) <= range($S^+$))
+      - Anti-monotonic: violation, if itemset violates Range(S)>=v, does the superset also violate it?
+        - Superset can satisfy the constraint, because the range can grow as different items are added, but it is not guaranteed. S can violate constraint, and $S^+$ can satisfy it.
+        - Not anti-monotonic if superset can satisfy constraint.
+  - Lift correlation
+    - Have population who bikes, skis, or neither. Matrix is: BS:300, B$\bar{S}$ = 200, $\bar{B}$S = 270, $\bar{B}\bar{S}$ = 230
+      - Hence: Lift (A,B) = P(A$\cup$B)/P(A)P(B)
+        - Lift(B,S) = (BS/N)/(B/N)(S/N)
+          - Lift(B,S) = (300/1000)/(500/1000)(570/1000)
+  - $\chi^2$ Correlation
+    - Computation: expected value is Count(A)xCount(B)/N, so for biking skiing it could be Count(biking)xCount(skiing)/N = 500x570/1000
+    
+    
