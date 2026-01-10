@@ -1,0 +1,256 @@
+---
+title: "DataMiningMethods_Mod2"
+author: "Sean Guglietti"
+date: "2025-12-01"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+``` 
+
+# Classification
+
+### Lesson 1: Introduction
+  - Learning objective: Apply techniques for classifications and explain how they work
+  - Supervised vs. Unsupervised
+    - $\textbf{Supervised}$
+      - Predefined classes, training data with groundtruth label
+      - Classify new data based on training data
+    - $\textbf{Unsupervised}$
+      - No predefined classes
+      - Aims to identify potential clusters/patterns
+  - Classification vs. Prediction
+    - Classification:
+      - Categorical class labels, can be yes/no, class1/class2/class3/...
+      - E.g., Fraud detection, disease diagnosis, object recognition
+    - Prediction:
+      - Continuous numerical values typically, e.g., stock price, traffic volume, # of likes
+  - Classification process
+    - Step 1: Learning
+      - Use training data (objects with attributes and corresponding class labels), construct model
+    - Step 2: Classification
+      - Test data (do not have class labels), model evaluation, model selection
+    - Real-world deployment
+      - New data, model adaptation
+  - Evaluation criteria
+    - Accuracy: Is the predicted class label correct?
+    - Speed: Model construction, Online use, want efficiency, 
+    - Interpretability: Explain the decision (What attributes are the model picking up on? Is the model a black box or can you explain why/how it gets the class label)
+    - Robustness: Noises, missing data, how the model handles that
+    - Scalability: Large data, incremental data, do you need to redo the training if you get new data or can you take the model and update it based on the new data (incrementally, stream processing cases, much more efficient to incorporate data in an incremental fashion)
+
+
+### Lesson 2: Decision Tree Induction, Example
+  - Example: Loan application approval
+    - Classes: Yes or No
+    - Applicant attributes:
+      - ID, age, student, income, credit rating, etc...
+    - Tree-model
+      - Takes a look at an attribute (i.e., Age), depending on value of that attribute, it will either classify the case, or will ask another question based on another attribute (i.e., if the applicant is <= 30, it will ask if they are a student, if yes -> approved, if no -> not approved). 
+      - Very explainable, leaf nodes are where decisions are made
+    - How do you construct it?
+      - Basic algorithm
+        - Attribute selection (at any level, ask a question, and what question do you ask?)
+        - Attribute split (what values correspond to what branch of the tree?)
+      - Key properties
+        - Top-down, recursive (Start at top node, pick an attribute, branches based on splitting, and then it's recursive as you now restart from the new subtree)
+        - Divide and conquer 
+        - Greedy algorithm (Might not be globally optimal but has very reasonable performance)
+    - Information gain (ID3):
+      - Intuition reduce class entropy (information)
+        - If everyone has same class label (either approve cases or reject cases), then you have pure class distribution, meaning you have lower class entropy, purer = better
+        - Original dataset D, m classes $C_i$, C is number of records in ith class, D is total number of records. 
+          - $p_i = |C_{i,D}|/|D|$, i is the class label
+            - $Info(D) = - \sum_{i=1}^m{p_ilog_2(p_i)}$
+          - Classify D using attribute A
+            - A: $a_1, a_2, ...,, a_v$, $Info_A(D) = \sum_{j=1}^v{|D_j|/|D| * Info(D_j)}$
+        - If you go through all the possible values for an attribute, the information from using a to classify D is calculated with the above info equation, Dj is the number of objects that fall in j, and then Info(Dj) is the information sum for that subset of D. You are summing through the v possible values that attribute A can hold, Dj is the number of applicants/records/candidates in the dataset that contain the specific value j of attribute A
+        - Information gain:
+          - Gain(A) = Info(D) - $Info_A(D)$
+            - You want to pick the attribute with the most info gain
+    - Example: DT example
+      - Loan approval
+        - 12 applicants, 2 classes: yes(7), no(5), 5 attributes (Age, Income, Student, Credit Rating, Loan (target))
+        - Info(D) = I(7,5) = $-\frac{7}{12}log_2(\frac{7}{12}) - \frac{5}{12}log_2(\frac{5}{12}) = 0.980$
+          - Again, note that the $\frac{C_{i,D}}{D}$ value ends up being the number of records corresponding to each class divided by the total number of records in the dataset D. For yes it is 7/12, for no it is 5/12.
+      - For different attributes:
+        - Age:
+          - Broken into three branches, <= 30, 31-40, > 40
+            - We now go into that subbranch, for age for example, there are 5 records with <= 30, 2 of which are yes, for 31-40 there are 3 records, all of which are yes, and for > 40 there are 4 records, 2 of which are yes. The corresponding calculations will thus be:
+            $$ Info_{Age}(D) = D_{<=30}/D*Info(D_{<=30}) + D_{31-40}/D*Info(D_{31-40}) + D_{>40}/D*Info(D_{>40})$$
+            $$ Info_{Age}(D) = 5/12*(-(\frac{2}{5}log_2(\frac{2}{5})) - (\frac{3}{5}log_2(\frac{3}{5}))) ...$$
+          - End up getting $Info_{Age}(D)$ = 0.738, thus Gain(Age) = 0.980 - 0.738 = 0.242
+          - Comparing information gain, we want the attribute providing the largest information gain, hence why in the decision tree age is the first set of decision branches.
+      - Other DT methods
+        - Splitinfo:
+          $$ SplitInfo_A(D) = -\sum{\frac{|D_j|}{|D|}log_2(\frac{|D_j}{|D|})}$$
+          - gainRatio(A) = Gain(A)/SplitInfo(A)
+          - Looking at how the subsets are formulated, if you have large gain but you are spreading it out a ton (ton of branches) it is worse than a slightly lower gain for less branches
+        - Gini Index (CART): Instead of one branch per attribute, tries to limit it to only binary branching.
+          - Gini(D) = 1 - $\sum_{i=1}^m{p_i^2}$
+          $$Gini_A(D) = \frac{D_1}{D}Gini(D_1) + \frac{|D_2|}{|D|}Gini(D_2)$$
+          $$\deltaGini(A) = Gini(D) - Gini_A(D)$$
+          
+          
+### Bayesian Classification, Example
+  - Bayes' Theorem: $P(H|X) = \frac{P(X|H)P(H)}{P(X)}$
+    - Probability of Event H occuring given X has already occured is the probability of X occuring given H, multiplied by the probability of H, all divided by the probability of X 
+    - Can use it to compute the probability of an object X belonging to a specific class.
+  - Statistical Classifier
+    - X: A data sample, class unknown
+      - H: Hypothesis that X  belongs to class C
+        - P(H), P(X): prior probability
+          - P(X|H), P(H|X): Posterior probability
+  - Naive Bayesian classifier
+    - Iterating through m classes, calculating 
+    - X = ($x_1, x_2, ..., x_n$) (i.e., there are n attributes)
+    - m classes: $C_1, C_2, ..., C_m$
+    - Classification: maximal P($C_i$/X) = $\frac{P(X|C_i)P(C_i)}{P(X)}$
+      - Ignore P(X) since it's a constant for all classes
+      - $\textbf{Naive Assumption:}$ no dependence between attributes:
+        $$P(X|C_i) = \Pi_{k=1}^nP(x_k|C_i) = P(x_1|C_i) x P(x_2|C_i)x...xP(x_n|C_i)$$
+          - Each $P(x_k|C_i)$ is equal to the number of records with the attribute value $x_k$ that belong to class $C_i$ divided by the number of records that belong to class $C_i$
+          - $P(x_k|C_i) = \frac{P(C_i|x_k)P(x_k)}{P(C_i)}$, 
+            - where $P(C_i|x_k)$ = number of records corresponding to class $C_i$ that belong to the subset of records that have attribute value $x_k$, in loan example, $P(C_{Approved}|x_{age})$
+      - 0-probability => add 1 to each case (Laplacian correction), if one attribute doesn't happen, i.e., if there are no <=30 aged people in the above example, then the multiplication will multiply to 0, thus by adding 1 it will remain the same.
+  - Example:
+    - Loan: 2 classes 
+      - P(loan = "yes") = $\frac{7}{12}$
+      - P(loan = "no") = $\frac{5}{12}$
+    - Applicant X
+      - Age <= 30
+      - Income = medium
+      - Student = yes
+      - Credit rating = fair
+    - Need to calculate probability of each attribute occuring given the class
+      - X(loan = yes, loan = no)
+        - Age <= 30 (2,3)
+        - Income = medium (3,2)
+        - Student = yes (5,1)
+        - Credit rating = fair (5,2)
+      - P(age <= 30 | loan = yes) = 2/7 (simply number of yesses for age <= 30 divided by total number of yesses)
+      - P(income = medium | loan = yes) = 3/7
+      - P(student = yes | loan = yes) = 5/7
+      - P(credit_rating = fair | loan = yes) 5/7
+      - P(X|loan = yes) * P(loan = yes) = 2/7 * 3/7 * 5/7 * 5/7 * 7/12
+    - For P(X|loan = no)
+      - P(age <= 30 | loan = no) = 2/5
+      - P(income = medium | loan = no) = 2/5
+      - P(student = yes | loan = no) = 1/5
+      - P(credit rating = fair | loan = no) = 2/5
+      - P(X|loan = no) * P(loan = no) = 2/5 * 2/5 * 1/5 * 2/5 * 5/12
+    - Recall the numerator is what we are concerned about, the denominator is ignored as P(X) is a constant for all classes.
+      - Comparing the yes vs. no cases, whichever one is higher is the class label you will use
+  - Bayesian belief network
+    - If dependencies exist, then you cannot use naive classifier
+      - Example, Rain, Sprinkler => Grass wet
+        - Rain: T = 0.3, F = 0.7
+        - Sprinkler: Rain T => 0.1 chance sprinkler will run, 0.9 chance it will not, Rain F => 0.5 chance it will run, 0.5 chance it will not.
+        - Now we have grass wet: 
+          - Rain T| Sprinkler T => 0.99 grass wet, 0.01 not
+          - Rain T | Sprinkler F => 0.9 grass wet, 0.1 not
+          - Rain F | Sprinkler T => 0.8 grass wet, 0.2 not
+          - Rain F | Sprinkler F => 0.0 grass wet, 1.0 not
+      - Conditional dependency of variables
+        - Probabilistic graphical model
+          - DAG: Directed acyclic graph
+            - Take variables that do not depend on others, and then later add the later variables that are dependent, direction shows dependency. Remember no cycles, every "road" leads to a leaf node.
+            - Root node: Rain 
+              - Rain = Yes -> points to Sprinkler which goes yes or no, each of these then point to a grass wet leaf node which contains the probability.
+          - Conditional Probability Table
+
+### Support Vector Machines
+  - Usually performs better than other methods.
+  - Basics:
+    - Provided with objects and their class labels.
+    - Separating "hyperplane", if you are on one side you are in one class, on the other side you are in the other. 
+    - "maximum margin", if you are trying to separate the classes, you need an exact position from the boundary, We are trying to find the hyperplane with the maximal margin, there is only one maximal margin, and that is the optimal solution.
+    - Support vectors, there is a hyperplane denoted by a red line, the closest points on both sides denote the margin, those are the support vectors. w * x * b +/- 1
+    - Linearly separable, can work in the original space. But sometimes the data is linearly inseparable, i.e., there is a "wavy" boundary, no way to divide by a line.
+      - Use a higher-dimensional space
+        - Use transformations that separate the data in the higher dimensional space
+          - Dot product on transformed data is mathematically equivalent to applying a kernel function to the original data
+          - kernel functions: instead of projecting everything, can just use a kernel function to do it on original data
+
+
+### Neural Network
+  - There are several layers
+    - Input, hidden, output layers. 
+      - Considerations for how many layers, and how many units per layer
+      - Output layer depends on how many classes you have
+    - Weighted connections
+      - Initial weights, adjustments
+        - Can use training data to tune weights
+    - Feedforward
+      - Observations => classification
+        - Observations are the input values, and the weights along the edges lead to the output layer, which is where the model creates the classification decision
+    - Backpropagation
+      - Classification error => weight adjustment
+    - Basic unit: Neuron
+      - Takes inputs into units, get weights, lead to a transfer function, you then get a net input $net_j$ which leads to the activation function, which has a threshold or bias, and then provides as output $o_j$ 
+  - Deep neural networks
+    - Neural networks been around for a while, weren't super powerful but still used, but recently deep neural networks have had many advancements:
+      - Advances in data, computation, and models
+        - More data generally
+        - Enhanced computation capability as they can be computationally expensive
+        - Model optimization has improved, algorithms developed 
+    - Ex: Convolutional Neural Network
+      - Activation function, regularization, attention, ...
+        - Really good for computer vision tasks
+        - High level:
+          - Take a window, aggregate chunks into smaller bits through convolution and pooling layers. 
+            - For example: Convolution, pooling, convolution, fully connected layer where you make classification decision.
+        - Great for image analysism lot of research still going on
+        - Activation functions still being researched, what is the threshold for activation
+  
+### Ensemble, Model Evaluation
+  - Pros and cons of different methods:
+    - Decision tree: Efficient, easy to interpret
+    - Bayesian classification: Efficient, explainable, incremental
+    - SVMs: Good/high performance
+    - Neural networks: Complex, high performance, poor interpretability
+  - Ensemble: Combined use of multiple models
+    - Analogy: Consulting multiple medical doctors. Intuitively reasonable to leverage multiple models when classifying.
+  - Types of ensemble models
+    - Bagging: Equal weights, majority voting
+      - Training set: random sample with replacement
+    - Boosting: Weighted votes
+      - Adjust weights to focus more on misclassified cases
+      - High-level ideas:
+        - How you weigh the votes, and how you adjust that based on misclassified
+          - Say you have a million objects, half of which are easy, other half are hard, you want to weigh the votes based on performance on the hard half 
+  - Evaluation
+    - Holdout, random sampling
+      - Split into training and test set and evaluate on test set which model has not seen
+    - k-fold Cross-validation
+      - Split into k partitions, each 1 for testing and (k-1) for training
+    - Bootstrapping
+      - Random sampling with replacement
+        - Example, you have n objects, do n random samples, with replacement meaning each object has 1/n chance of being chosen, but when you resample you can select the same object.
+  - Classification Accuracy
+    - Confusion matrix (predicted vs. actual class)
+    - Sensitivity: True positives/total positives
+    - Specificity: True negatives/total negatives
+    - Precision: true positives/(true positives + false positives)
+    - Accuracy = sensitivity(pos/(pos+neg)) + specificity(neg/(pos+neg))
+  - Costs and benefits of TP, TN, FP, FN
+    - Have to evaluate how bad FP and FN are, need to make models in such a way to prioritize the domain-centric importance, i.e., a FN for fraud is real bad
+  - For multi-class classification
+    - Exact match: i.e., predicted class = Actual class
+    - There are scenarios where it's fine that you get to a similar class
+    
+### Model Selection
+  - Prediction Error (Difference between predicted values and actual values)
+  - Mean square error, mean absolute error, relative absolute error, and relative square error.
+  - ROC Curve (False positive rate vs. True positive rate) 
+    - X: f_pos/neg
+    - Y: t_pos/pos
+    - Area below cuve: accuracy, diagonal line = 0.5 accuracy
+  - T-test
+    - Two models, M1 and M2, k-fold cross-validation
+      - err(M1)1,....,err(M1)k vs. err(M2)1,...,err(M2)k
+        - Choose model with lower mean error? 
+          - Is it statistically significant or by chance? -> this is the hypothesis the t-test will evaluate
+    - $ t = \frac{\bar{err}(M_1) - \bar{err}(M_2)}{\sqrt{var(M_1 - M_2)/k}}$
+      - $var(M_1 - M_2) = \frac{1}{k}\sum_{i=1}^k[{err(M_1)_i - err(M_2)_i - (\bar{err}(M_1)-\bar{err}(M-_2))}]^2$
