@@ -1,0 +1,207 @@
+---
+title: "DataMiningMethods_mod3"
+author: "Sean Guglietti"
+date: "2025-12-02"
+output: html_document
+---
+
+# Data Mining Methods Module 3 - Clustering
+
+### Introduction to Clutering - Lesson 1
+  - Learning objective: Apply techniques for clustering and explain how they work. Evaluate and compare methods
+  - Clustering: Say you have objects defined by several attributes, and there are no predefined classes. Clustering is grouping
+    - Intra-cluster similarity: objects within clusters should be similar,
+    - Inter-cluster dissimilarity: objects between clusters should be different
+  - Clustering is an unsupervised learning approach
+    - Group similar objects into clusters
+    - Todo: Need a $\textbf{Similarity measure}$
+      - Types of objects, similarity/dissimilarity
+      - Clustering method
+        - Quality, efficiency, incremental (you have new data coming in/dynamic data)
+  - Cluster evaluation  
+    - Clustering tendency: Are there clustering effects or is the distribution more uniform
+    - Cluster cohesion and separation: Inter/intra cluster similarity/dissimilarity
+    - Number of clusters (e.g., silhouette coefficient)
+      - How do we determing number of clusters as well?
+        - Silhouette coefficient: compare the inter-cluster distance between points (mean distance between points), compare distance to other clusters
+        - Comparison with external knowledge 
+        - Comparison of two sets of clusters
+  - Types of Clustering Methods
+    - Partitioning methods (dividing up dataset, n objects -> k clusters)
+    - Heirarchical methods (constructing clusters at different levels)  
+    - Grid-based methods (instead of clustering objects, divide up space first)
+    - Density-based methods (need a way of identifying denser areas)
+    - Probabilistic methods (assigning with probability)
+    
+### Partitioning Methods - Lesson 2
+  - Given n objects and k clusters
+    - Partition the n objects into k clusters
+  - Brute force approach
+    - Enumerate all possible partitions and use a cluster evaluation method to find the best partition.
+  - Heuristic methods (find which assignments may be better without checking everything)
+    - k-means: cluster centroid (mean of objects) 
+      - Using the centroid notion: find the average or mean value of the cluster
+    - k-medoids: cluster medoid ("central" object)
+      - Still partitioned based, instead of using a centroid (which may not be an actual object), we use a medoid, which is an actual object that has a central position compared to other objects in the cluster.
+  - K-means clustering
+    - Iterative process: 
+      - 1. Pick k initial centroids (e.g., randomly, or leverage domain knowledge)
+      - 2. Assign each object to the nearest centroid 
+        - Just calculate distance, assign the jawn
+      - 3. Update each centroid based on objects to its cluster, take updated object membership and compute new centroid by finding new mean value of objects in cluster
+      - Repeat 2 & 3 until centroid are stable (i.e., they don't change or very, very slightly change)
+      - O(nkt): n objects, k clusters, t iterations, usually fairly efficient and works well
+    - Example: 10 objects {35, 69, 9, 78, 9, 23, 81, 57, 15, 48}
+      - 2 initial centroids: 30, 60
+        - Assign each object to nearest centroid: 
+        - Sorting makes process easier, so we get {9, 9, 15, 23, 35, 48, 57, 69, 78, 81}
+        - Assigning we get:
+          - Cluster 1: 30 {9,9,15,23,35}, Cluster 2: 60 {48, 57, 69, 78, 81}
+        - Update centroids by summing values and dividing by number of objects:
+          - Cluster 1: (9 + 9 + 15 + 23 + 35) / 5 = 18.2
+          - Cluster 2: (48 + 57 + 69 + 78 + 81) / 5 = 66.6
+        - Reiterate:
+          - Cluster 1: 18.2 {9,9,15,23,35}, Cluster 2: 66.6 {48,57,69,78,81}
+            - Meaning cluster doesn't change, hence centroids are stable.
+    - Features of k-means clustering.
+      - Widely-used (basically the go-to method), efficient, and good results.
+      - But you do need to specify k and define initial centroids
+        - How do you define centroids for different cases, i.e., categorical variables? 
+      - Choice of initial centroids
+        - Random centroids typically work, but these can really skew results, can diverge
+          - Usually try multiple sets of random centroids to see if results are similar
+        - Leverage domain knowledge
+      - Not suitable for non-convex shaped clusters
+        - I.e., donut shaped clusters, always assigning 
+      - Sensitive to noise & outliers
+
+### Hierarchical and Grid Based Clustering - Lesson 3
+  -  k-medoids clustering
+    - Instead of using a centroid we use an actual object, want to find the most central object of a cluster.
+    - Similar as k-means, iterative, refining through each iteration
+      - But because we are using a medoid (which again is a "central" object/datapoint) we are now trying to minimize the distance between the other points and medoid.
+        - Due to this, it is less sensitive to noise and outliers
+        - Medoid update is more computationally expensive as you have to actually find the medoid object. Have to iterate through all objects to find the optimal medoid.
+        - Can speed it up using randomized samples, instead of trying everyone you randomly try a smaller set.
+          - Another example: checking the neighbourhood of the current medoid when updating will reduce the group that you have to check.
+  - Hierarchical clustering
+    - Instead of separating as you do with partitioning where it only has one level, you try to have different levels
+      - Dendrogram: a tree of clusters, shows how the objects are organized into clusters.
+      - Agglomerative: Bottom-up merging, start with individual objects, and do rounds of merging. Calculate distance between clusters and choose the smallest one
+      - Decisive: Top-down splitting, look at cluster and look at what objects tend to be further apart, separate them into different clusters.
+    - Features of hierarchical clustering:
+      - Useful in many real-world applications (i.e., if you don't know how many clusters you have, this can help play around with it)
+      - No need to specify number of clusters
+        - DO have to define cluster distance for merging and separating, as those processes are dependent on the distance of the clusters/objects
+          - Defining cluster distance:
+            - Can look at pairwise object distance calculations, and you can look at the minimal or maximal difference between the two clusters
+      - Multi-level clustering
+      - Cannot undo cluster merge/split (due to hierarchical structure, have to work with what has been decided in previous level)
+  - Grid-based clustering
+    - Take a multi-resolution grid structure, and define clusters of different resolutions (i.e., 2x2, or 4x4, or 8x8, etc.), At each level, once you have grid cells, you simply count how many objects fall within each grid cell, at certain levels of object attendance, it will then be defined as a cluster
+    - Cluster boundaries: due to dividing up space, cluster boundaries are defined by the horizontal and vertical boundaries and thus the shape is not as dynamic as in other methods.
+    - Object space => grid cells
+      - Depends on no. of cells, easy to parallelize (grid cells handle main thing, may do aggregation but at same level it is easily parallelizeable)
+    - Statistical information of grid cells
+      - How many objects do you have, average, st dev, can now just simply update the statistical information, which is useful for incremental processing (i.e., compared to k-means or k-medoids where you need to recalculate the actual cluster definitions)
+  
+  
+### Density-based clustering - Lesson 4
+
+  - Clusters are defined as local groups with high density (in a local neighbourhood)
+    - Approaches:
+      - DBSCAN: widely used. Defines neighbourhoods and you calculate density based on number of objects in that neighbourhood. Can keep growing the neighbourhood as long as it is above a specified density threshold
+      - DENCLUE: sum of local influence functions
+    - Key features
+      - Arbitrary cluster shape, noise tolerant
+        - Since the clusters are not defined by the means of all the objects for example, things like outliers are unlikely to find a cluster, as long as you have a good densityy threshold
+      - Single scan, adjustable density parameters
+  - Specific methods
+    - DBSCAN: 
+      - Two key parameters: $\epsilon$-neighbourhood: within radius $\epsilon$ of point p
+      - MinPts: min number of points in p's $\epsilon$-neighborhood for p to be considered a $\textit{core object}$ 
+      - Clustering process: All about growing neighbourhood, core objects and reachable border objects which allow you to naturally define cluster space
+      - Density-connected, density-reachable
+    - DENCLUE
+      - Influence function: an object's impact in its neighbourhood. Every object has an influence function, and it is usually dependent on it's neighbourhood. Looking at any field, every object has it's own influence function, and thus any point in that field has an aggregated influence function.
+      - Overall density: sum up all objects' influence function.
+      - Density attractors: clusters correspond to local maxima in the density field
+
+### Probabilistic Clustering - Lesson 5
+  - Cluster membership:
+    - n objects, k clusters
+      - In previous approaches, each object belongs to a single cluster. But in real world settings it can be useful to have some "fuzziness", this can be where probabilistic clustering approaches can help
+  - Fuzzy clusters
+    - Each object has a certain probability of belonging to a specific cluster
+      - 0 <= $w_{ij}$ <= 1.0 (j = 1,... k) & $w_{i1} + w_{i2} + ... + w_{ik} = 1.0$
+    - Hidden categories/cluster models
+      - i.e., Customer groups => purchase behavior
+      - Each group: probability density function over purchases
+      - Groups from different clusters may buy certain products but at different probabilities/rates
+    - Mixture model
+      - Each object drawn independently from multiple clusters
+      - E.g., given a customer's purchase behaviour, he/she has a certain probability of coming from any group
+    - Model-based clustering
+      - Assumption: Data D generated by a mixture of probabilistic models C (the list of clusters which have corresponding probabilistic models)
+        $$P(D|C) = \Pi_{i=1}^n{P(o_i|C) = \Pi_{i=1}^n{\sum_{j=1}^k{w_jf_j(o_i)}}}$$
+      - Given C (mixture of models) and D (dataset), you are calculating the probability of C generating the dataset D. It is the combined probability of all the objects in the dataset being produced by mixture C. 
+        - $f_j$ is the jth function in the mixture, and it has associated weight $w_j$
+      - Goal: optimize the fit between the data and models
+        - Find C of k probabilistic clusters s.t. P(D|C) is maximized
+        
+### EM Clustering - Lesson 6
+  - Probabilistic Method: Expectation Maximization 
+    - Iterative refinement: similar process as k-means
+    - Mixture of models
+      - e.g., Gaussian models: $\theta_j$ = ($\mu_j, \sigma_j$)
+      - Each cluster is defined by a probabilistic model, and the cluster mean is thus the weighted sum of objects.
+  - Method
+    - E-step: Expectation (k-means clustering, assigning objects, calculating probability of each object belonging to a particular cluster)
+      - Compute $P(o_i|\Theta_j)$/$\sum_{j=1}^k{P(o_i|\Theta_j)}$
+        - Theta is current set of mixture models, for each object i you need to calculate the probability of $o_i$ belonging to $\Theta_j$, which is the jth model, and can use probability density of that model to determine that. 
+        - The sum in the denominator is the aggregated probability of i belonging to all of the different models, which should never be higher than 1.0, hence need to normalize. Note that the fraction is thus the partial weight of object i belonging to the jth model/cluster
+        - This step is assignment
+    - M-step: Maximization (updating)
+      - Now need to update model parameters
+      $$ \mu_j = \sum_{i=1}^n{o_i \frac{P(\Theta_j|o_i, Theta)}{\sum{l=1}^n{P(\Theta_j|o_l,\Theta)}}} $$
+      $$ \mu_j = \frac{\sum_{i=1}^n{o_iP(\Theta_j|o_i, \Theta)}}{\sum_{i=1}^n{P(\Theta_j|o_i, \Theta)}}$$
+      $$\sigma_i^2 = \frac{\sum_{i=1}^n{P(\Theta_j|o_i,\Theta)(o_i - \mu_j)^2}}{\sum_{i=1}^n{P(\Theta_j|o_i, \Theta)}}$$
+      
+      - Very similar process to k-means, you are assigning, and then changing the clusters based on the assignments.
+  - Features
+    - Good performance in many applications, easy to implement: ($\mu_j, \sigma_j$) parameters
+    - Converges quickly, may not be optimal (Gaussian distribution pretty damn good)
+    - Not good if the number of objects is small
+    - Computationally-intensive for large number of clusters
+
+
+### High Dimensional, Bi-Clustering, Graph Clustering - Lesson 7
+  - Specific challenges with clustering
+    - High dimensionality in many applications
+      - E.g., text, audio, video, scientific data
+      - With most basic clustering algorithms, once you get to ten-hundred-thousand dimensions it doesn't really work
+    - Curse of dimensionality
+      - Every time you add a dimension, you are projecting into a higher dimension space, and thus you get sparse, noisy, equi-distance, and irrelevant dimensional data
+        - Makes it much harder to find neighborhoods, harder to differentiate points that should be in the same cluster.
+        - Irrelevant dimensions add confusion and increase dimensionality
+    - Methods to deal with
+      - Dimensionality reduction (removing non-useful dimensions, finding principal components, feature engineering to reduce dimensionality)
+      - Subspace clustering: Clusters may be found in subspaces, i.e., look at the individual dimensions, and find the clusters in the individual dimensions, and then the combinations of those individual clusters can be used to find true clusters. Working with the individual dimension subspaces instead of the entire dataset
+        - Dimension-reduction, if a dimension doesn't have any naturally clusters for example, get rid of it
+      - Frequent pattern based
+  - Bi-Clustering
+    - Clustering both objects and attributes, discovers local coherences over a subset of conditions
+  - Graph Clustering
+    - Wide use of graph data in the real world, this is in social networks, co-authorship, protein interaction for example. 
+    - Graph clusters: well-connected substructures (imagine a cluster of the people from DSSS)
+    - How do you do it: Generic clustering methods
+      - Graph-specific clustering: e.g., community detection
+      
+### Constraint Based Clustering - Lesson 8
+  - General idea: instead of find all the clusters, find them based on specific constraints
+    - General benefit: Restricting what kinds of clusters you will find, which makes process more focused. Helps leverage domain knowledge, and is efficient.
+    - Allows you to focus on certain objects, or properties. For example if you want to look at sales specifically in certain locations/times/categories it will be constraint based clustering.
+    - Distance functions: Weighted attributes, i.e., prioritize certain attributes in the distance functions. Can also remove certain attributes/obstacles or lower the weights for those corresponding attributes
+    - Can constrain clustering parameters, like number of clusters, $\epsilon$-neighborhood, MinPts...
+    - Allows you to leverage domain knowledge in the mining process, i.e., how you choose initial clusters, 
+    - Semi-supervised learning approach: i.e., may not know exact class labels, or may know a few, but can say certain objects should be in the same or a different cluster
