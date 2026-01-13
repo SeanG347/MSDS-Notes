@@ -1,0 +1,144 @@
+---
+title: "DataMiningMethods_mod4"
+author: "Sean Guglietti"
+date: "2025-12-04"
+output: html_document
+---
+
+# Module 4 - Outlier Analysis
+
+### Types of Outliers - Lesson 1
+
+  - Outlier/Anomaly:
+    - General/normal patterns
+      - Frequent patterns, classification, clustering
+    - $\textbf{Abnormal}$: Differs from the norm
+      - Key point of outlier analysis/anomaly detection is to detect abnormalities
+        - Should we just remove outliers?
+          - In many cases they can be very important, they can be fraud, significant events, etc... There are many cases where the outliers ARE the thing you are looking for in the data analysis.
+  - Types of outliers
+    - Global: Object differs from the rest
+    - Contextual: Object differs in a context (i.e., variance from a very stable periodic trend)
+      - I.e., A high temperature value in the winter or low value in the summer
+    - Collective: Group of objects differ from trends
+  - Examples
+    - Environmental: Temperature, Commute time, Wind power generation
+      - For example, that week in June where the temperature was like 40C for a week
+      - Commute time, if there's a crazy snow storm the commute time could be a contextual outlier
+      - Wind farm -> A day where you generate an abnormally high or low amount could be indicative of turbine failure or abnormally high winds
+    - Social: number of friends, posts, likes, in time series, network structure
+      - If I don't post ever, and then post 3 times in a day, that would be an outlier from the general pattern
+        - Also want to look at how things change, i.e., if you see likes spike by like 150% in one day, it may either be an algorithmic thing or it may be botted likes.'
+    - Financial: Stock price, credit card transactions, spatial/temporal
+      
+### Anomaly Detection Methods 1 - Lesson 2
+  - Normal vs. Abnormal
+    - No clear definition, vary by application, have to accomodate for noisy data.
+  - Efficiency
+    - Want to find anomalies, but in most real world cases you care about things like latency (how fast you can detect something like fraud), scalability (how much data you can monitor), adaptability (Don't have a clear definition of normal vs. abnormal, so you want to be able to adapt to different problem scenarios)
+  - Interpretability
+    - How to interpret and explain the results
+  - $\textbf{Methods}$
+    - Groundtruth label (if you know which cases are normal vs. abnormal you can build a classifier)
+      - Can use supervised (classification), unsupervised (clustering), and semi-supervised methods (cases where you have some idea of anomalies that you can leverage)
+    - Assumption oof normal vs. abnormal
+      - Statistical models can represent or capture abnormal data through st. deviations and means
+      - Majority vs. minority - Normal objects belong to the majority
+      - Proximity: Distance, density, if I'm close in proximity to normal groups i'm prob not an outlier
+  - Classification-Based Methods
+    - Supervised learning: Been provided labels for cases
+      - Normal and/or abnormal cases
+        - Can have mroe than one normal/abnormal classes too.
+    - Challenges
+      - Class imbalance: by nature faults are much less frequent so might be harder for classifier to classify them. Want a classification method that can handle imbalanced classes if you want to use it for anomaly detection
+      - New patterns: e.g., new types of security attack may show up in data in a different way. Outliers are different but can be different in many different ways! (adaptability)
+  - Clustering-based methods
+    - Unsupervised learning
+      - No pre-defined normal/abnormal cases, allows it to be more flexible often
+      - Leverage majority vs. minority clusters, bigger cluster are likely "normal", smaller considered abnormal
+      - Can also have multiple clusters for normal/abnormal cases
+      - Generalizable to different applications (flexible), need a similarity measure still, so try to leverage domain knowledge to choose the right clustering method.
+
+### Anomaly Detection Methods 2 - Lesson 3
+  - Proximity based methods:
+    - Far-away from other points => abnormal
+      - Differences between distance and density
+        - Distance
+          - Absolute proximity, e.g., from the kNN (k nearest-neighbour)
+            - Find a threshold where something is considered far away
+            - Imagine a situation where there are 2 clusters, one of which are tightly bundled, and the other is looser, if there is a point which clearly does not belong to the tightly bundled cluster, but the distance between it and the tightly bound group is similar to the average distance between points in the looser one. A distance-based proximity-based method would likely not flag it as an outlier
+        - Density
+          - Relative proximity, e.g., $\epsilon$-neighborhood
+            - This can solve the above problem.
+  - Semi-Supervised methods
+    - Partial labels: incomplete normal/abnormal cases
+      - Use a combination of clustering and classification
+        - In clustering we are not supervising at all, just group according to a clustering method.
+          - Normal: large clusters and/or normal cases
+          - Abnormal: small clusters and/or abnormal cases
+          - Classification: If you have sufficient labels from classifying through the clustering, you can build a classification model
+  - Different types of anomalies
+    - Contextual anomaly
+      - Context features => behavior features (e.g., similar weather conditions => solar/wind power implications)
+      - Identifying context: frequent patterns (typical scenarios that occur), subspaces, domain-specific
+    - Detecting anomaly within context
+      - Transform to global outlier detection
+  - Collective Anomaly (a group of objects that deviate from the norm)
+    - E.g., Distributed Denial-of-Service (If you look at requests from a specific machine there may be regular stuff, but then you realize that a very large number of machines are acting anomalously)
+    - Structural relationship among objects (e.g., purchases of specific items at certain times/locations)
+      - Once you have a structural grouping, you can use notion of a super object: take original objects, put them into groups of related objects, then transform back to global outliers
+      
+### Anomaly Detection Examples - Lesson 4
+  - Example: Remote sensing data
+    - Looking at spatial-temporal anomaly
+    - Purely unsupervised (no labels)
+    - Process
+      - RS data -> Pixel-level feature extraction -> missing and noisy pixel filtering -> object level feature extraction -> initial clustering -> cluster aggregation -> boundary optimization -> ST-outliers identification -> feature space standardization -> ST-outliers grouping with top k features -> Events ranking
+        - Pixel-level feature extraction: Get features and preprocessing for missing and noisy pixel (pixel being a data point)
+  - Wind farm
+    - Fault prediction
+      - SCADA data (idk what SCADA is) -> Data pre-processing -> Unsupervised fault detection -> RUL prediction
+    - Fault diagnosis
+      - Supervised fault classification (broken, working) -> Verification with status data -> status data
+  - Solar farm
+    - Hierarchical anomaly
+      - Individual panels -> connected by PV string -> combiner box -> Inverter -> Utility grid
+        - Can leverage nearby neighbours to evaluate anomalous behaviour, not just physically beside the panel, but panels that have similar situations
+          - Look across all the PV strings (have the info) -> calculate similarity -> predict expected pattern -> compare prediction and actual data, residuals capture deviance, seriousness evaluation -> auto thresholding -> identified faulty PV strings
+  - Types of outliers 
+    - Global (different from the whole)
+    - Contextual (different based on certain context)
+    - Collective
+  - Methods
+    - Unsupervised, Semi-supervised, contextual, structural
+
+### Sequence and Time Series Data - Lesson 5
+  - Sequence data: Ordered list, with or without time
+    - Time-series data counts as sequential data
+    - E.g., Biolegical sequence, stock price, trajectories
+    - Sequential pattern mining -> frequent subsequence
+    - Pairwise sequence alignment: e.g., BLAST
+      - What is the best alignment, what subsequences are better, globally how can you line them up to maximize similarity
+    - Sequence modeling/prediction: e.g., Markov chain model
+      - Markov chain model: Captures different states (graph model, vertices represent states), transitions have probabilities, if you see item A what is the possibility you see C or T for example.
+  - Time series data
+    - Combined signal of:
+      - Overall trend
+      - Cyclic patterns
+      - Random noise
+      - Anomalies
+
+
+### Graph and Online Social Network Data - Lesson 6
+  - Graph data
+    - G = (V, E) vertices, edges
+      - Very general, can capture relationships between a broad number of entities.
+      - E.g., movies, road network, directed and weighted links
+    - Graph mining
+      - Frequent subgraph
+      - Anomaly detection
+      - Graph modeling
+      - Link prediction
+  - Online social network data
+    - Users/groups, content, interactions
+    - OSN modeling, community detection,
