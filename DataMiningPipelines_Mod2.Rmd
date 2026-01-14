@@ -1,0 +1,160 @@
+---
+title: "MiningMethods_Mod2"
+author: "Sean Guglietti"
+date: "2025-11-11"
+output: html_document
+---
+# Data Mining Methods - Module 2
+
+### Data Objects, Attributes, Statistics
+
+  - Data understanding corresponds to: Objects/attributes, statistics (Variance, mean...), visualization, similarity
+    - Dataset: a collection of data objects
+      - Each described by a number of attributes (also known as features, dimensions, variables)
+  - Attribute types
+    - Categorical (nominal, binary, ordinal)
+      - Nominal: Finite number of potential values (e.g., major in a student record)
+      - Ordinal: few finite potential values that are $\textbf{ordered}$ (e.g., academic ranks)
+    - Numeric: Discrete or continuous
+      - Interval-scale or ratio-scaled (true zero)
+        - Whether or not the attribute has a "true zero" point, salary would have a true zero point of zero i.e.,. 
+        - Interval-scale: years do not have a true-zero point, as the year 0 is preceded by year xBC.
+        - e.g., year 2000, number of users, annual income
+  - Statistics:
+    - Number of objects and number of attributes
+    - Distribution of each attribute's values
+      - Categorical: % of each value
+      - Numeric: central tendency, dispersion
+        - Mean, median, mode, midrange ((max-min)/2)
+        - Dispersion:
+          - How much a distribution is stretched or squeezed
+            - Range: max - min
+            - Quartiles: Q1 (25%), Q3 (75%)
+            - IQR: Q3 - Q1
+            - Variance
+            - Standard Deviation
+    - Useful for comparison across attributes and datasets
+
+
+### Data Visualization
+
+  - Boxplot: contains Q1, Q2, Q3, IQR
+    - Whiskers: min, max, 1.5x IQR
+    - Outliers
+  - Histogram: Bars of different height
+    - X: sub-range (bin grouping)
+    - Y: frequency (bar height)
+  - QUantile plot:
+    - Quantile: percent of points below the given value
+    - X: percent
+    - Y: quantile
+  - QQ-plot
+    - Comparison of two quantiles
+      - 45-degree reference line
+        - Looking at percentile values and comparing distributions
+  - Scatter plot, comparison of two attributes: X and Y
+    - Pairwise plots are [airwise comparison scatter plots across multiple attributes
+
+### Similarity for Normal and Binary Attributes
+  - Data similarity 
+    - Object matrix: n objects x p attributes
+      - Can be converted into a "dissimilarity matrix", which is n objects x n objects, element i,j is the dissimilarity between object i and j, d(i,i) = 0, d(i,j) = a function of the elements similarity
+    - Nominal Attributes:
+      - Cars: car 1, car 2 are datapoints, features are type, make, model, color, condition
+      - determining similarity:
+        - If car 1 has features: SUV, Honda, CR-V, White, Good
+        - Car 2 has features: Sedan, Honda, Civic, Silver, Good
+          - Similarity: s = 1 if x = y; otherwise s = 0
+          - Dissimilarity: d = 0 if x = y; otherwise d = 1
+            - hence, for the two cars: similarity = 0 + 1 + 0 + 0 + 1 = 2, dissimilarity = 1 + 0 + 1 + 1 + 0 = 3
+        - Customizing: white is more similar to silver than red
+    - Binary Attributes
+      - Comparing two objects (i.e., users A and B) with 6 features:
+        - Symmetric (i.e., equal chance of Y or N)
+          - Same calculation as nominal attributes
+            - E.g., Hamming distance: # of bits that are different
+              - in example if we have user A: T T F F T F, user B: F T F F T T
+              - Hamming distance = 2 as the first and sixth bits are different
+        - Asymmetric (e.g., Y is less likely than N or vice versa)
+        - Matrix representation: uses a similarity matrix (columns being B=Y, B = N, rows being A = Y, A = N, and the values in the matrix being the number of times those statements are true across the attributes.
+        - Hence, for symmetric values: d(i,j) = r + s / q + r + s + t, where r = A=N, B=Y, and s = A = Y, B = N
+        - For Asymmetric variables: d(i,j) = r + s/ q + r + s, ignoring t, where A=B=N
+      - Jaccard coefficient
+        - sim(i,j) = q/(q+r+s) = 1 - d(i,j)
+      
+### Similarity for Ordinal, Numeric, Mixed Attributes
+  - Recall: Ordinal -> Finite potential values that are ordered (think: small, medium, large)
+  - Similarity:
+    - Map to their ranks (in small, med, large -> 1, 2, 3)
+    - Map to [0,1] $z_{if} = \frac{r_{if} - 1}{M_f - 1}$
+  - Numeric Object Dissimilarity
+    - Usually measured by distance
+      - Minkowski distance (l_p norm)
+      $$ d(i,j) = (|x_{i1} - x_{j1}^p + |x_{i2} - x_{j2}|^2 + ...) $$
+      - p=1 is the "Manhattan distance"
+        - Can only go horizontally or vertically on a cartesian plot 
+      - p=2 is the "Euclidean distance"
+        - Sum of square differences
+    - Properties
+      - d(i,i) = 0
+      - d(i,j) >= 0
+      - d(i,j) = d(j,i)
+      - d(i,j) <= d(i,k) + d(k,j)
+      - Triangular inequality
+    - Cosine similarity
+      - Useful in text documents
+      - Frequency of word occurence
+      - High dimensional
+      - Measuring Angular similarity of vectors: inner product
+        $$ cos(\theta) = cos(A,B) = AdotB/||A||||B|| = \frac{\sum{A_iB_i}}{\sqrt{\sum{A_i^2}}\sqrt{\sum{B_i^2}}}$$
+      - Example: 
+        - Two documents, key words are: game, basketball, player, injury, win
+        - Doc 1 # of occurences: 3, 5, 2, 1, 2
+        - Doc 2 # of occurences: 1, 3, 4, 2, 1  
+          - D1*D2 = 3x1 + 5x3 + 2x4 + 1x2 + 2x1 = 30
+          - ||D1|| = (3x3 + 5x5 + 2x2 + 1x1 + 2x2)^(1/2) = 6.557
+          - ||D2|| = (1x1 + 3x3 + 4x4 + 2x2 + 1x1)^(1/2) = 5.568
+          - cos(D1, D2) = 30/(6.557*5.568) = 0.822
+            - 0.822 a pretty high similarity score.
+    - Sequential data, time series
+      - Euclidean distance/matching, just takes the difference between the datasets for the corresponding time indices. 
+      - Dynamic time warping, Not direct match in time, but corresponds more to the shape of the curves
+    - Mixed Attribute Types
+      - Weighted sum across attributes 
+        - d(i,j) = $\frac{\sum_{f=1}^p \sigma_{ij}^{(f)}d_{ij}^{(f)}}{\sum_{f=1}^p{\sigma_{ij}^{(f)}}}$
+      
+### Data Similarity/Dissimilarity
+  - How to choose the right similarity measure;
+    - Dense, continuous data: Euclidean, Manhattan...
+    - Asymmetric binary attributes: ignore the null/null cases
+    - Sparse (high dimensional) data: Cosine similarity, Jaccard similarity
+    - Subset: e.g., seasonal patterns, subgroups (Do you want to consider everyone in your dataset or is only a subset necessary?)
+    - Domain knowledge, types of patterns to learn (always think about how you can incorporate domain knowledge into how you decide what similarity metric to utilize)
+  - Specific example
+    - From social media data: 
+      - What are we trying to learn? What type of data is there? What type of attributes are there? 
+        - Types of data: User, post, timestamp, reactions, network
+          - Note we can ignore some of the attributes, just good to know what is available
+        - Statistics, Visualization
+          - # of objects, # of   attributes, distributions, outliers, 
+            - Can get aggregated stats, such as # of posts by a particular person, how many posts the average user posts per week
+          - Can use visualizations such as box plots, qq plots, etc., to see what values are typical, and which are outliers
+        - Similarity/Dissimilarity
+          - Nominal, binary, numeric, text, temporal
+          - User-level: try to see how users are similar, do they post on similar things, how they react, when they post, etc.
+
+### Example: Air Quality Sensing Data
+  - Beginning:
+    - Size: How many sensors, how many users, how long (duration of study), area (where were the devices used, how was the data collected)
+    - Stats: Distribution, mins, maxes, outliers, 
+      - If we take all CO2 readings, we have a way to calculate mean, sd, variance, quantiles, etc. Boxplots are great for this
+    - Visualizations
+    - Similarity/Distance
+      - in the air sensing data, it's useful to identify similarity between devices, areas, etc. 
+      - Say we have a time series for all the continuous variables like CO, CO2, NOx, O3, PM 2.5, and also values for location, temperature, humidity, activity (riding a bus, biking, walking, sleeping, etc.)
+      - Weighted distance calculation
+      
+      
+    
+    
+    
