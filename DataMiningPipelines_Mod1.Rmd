@@ -1,0 +1,134 @@
+---
+title: "MiningPipeline_mod1"
+author: "Sean Guglietti"
+date: "2025-11-11"
+output: html_document
+---
+
+# Data Mining Pipelines - Module 1
+
+### Data Mining: Four Views
+  - Explosive data growth:  KB, MB, GB, TB, PB, EB, ZB
+    - Data creation, transmission, storage, sharing, processing
+      - Drowning in data and starving for knowledge. Need automated analysis for massive amounts of data. The automation process is solved with pipelines and mining.
+  - We want to discover knowledge from data, extract interesting patterns or knowledge from huge amounts of data. 
+    - Interesting: valid, previously unknown, potentially useful, ultimately understandable by humans.
+    - Huge amounts of data: we need efficient and scalable solutions due to the sheer amount of data.
+  - Data Mining: Four Views
+    - Start with data (valid data, you have to have knowledge about the data itself, such as variables and formats):
+      - Application -> Doing the mining for different applications, need domain knowledge
+      - Knowledge -> specific patterns or things trying to learn from the data
+      - Technique -> how do you extract the knowledge
+    - All of these four things have to be there 
+  - Data View and application View
+    - The 3Vs, 4Vs, 5Vs
+      - 3Vs:
+        - Volume (how big/how much data there is)
+        - Variety (how many different types of data? Strings, integers, etc.)
+        - Velocity (dynamics of data, how fast new data comes in)
+        - Veracity (quality of data, to what extent do you trust data)
+        - Value (overall quality, how useful is it)
+    - Data View:
+      - Dealing with a lot of relational, transactional data (E.g., student records, bank accounts, store purchases)
+      - Sequential, temporal, streaming data (E.g., Gene sequences, stock prices, sensor readings)
+      - Spatial, Spatial-Temporal Data (E.g., Land use, bird migration, traffic condition)
+      - Text, Multimedia, Web data (e.g., News articles, audio/video/image, hypertext)
+      - Graph, Network data (e.g., Social network, power grid, co-authorship)
+    - Application View
+      - Market analysis, target advertisement (e.g., Customer profiling, product recommendation)
+      - Healthcare, medical research (e.g., disease diagnosis, patient care, drug discovery)
+      - Science and engineering (e.g., air pollution, marine life, electric vehicles)
+      - Security (e.g., surveillance, intrusion/crime, fraud, cyberattack)
+      - Government, nonprofit (e.g., urban planning, traffic control, education)
+      
+    - Knowledge View
+      - Frequent pattern, association, correlation: 
+        - Songs listened together or in certain sequence, A is more/less likely to happen given B)
+      - Categorization (e.g., Similarity among users with certain purchases, differences between two patient groups)
+      - Anomalies, outliers (e.g., sensor errors, fraud activities, extreme events)
+      - Changes over time (e.g., emerging new patterns, shift of user interest)
+      - $\textbf{Descriptive, predictive, prescriptive}$ 
+        - Descriptive: describing stuff from the ata
+        - Predictive: predicting how things will look
+        - Prescriptive: Given an understanding about a certain situation, you can prescribe a solution that will work.
+    - Technique View:
+      - Frequent pattern analysis
+        - Frequent itemset, sequence, structure
+        - Association rules, correlation analysis
+      - Classification:
+        - Pre-defined classes (i.e., dog, automobile, plane, cat)
+        - Need training data, build model to distinguish classes
+      - Prediction
+        - Numerical prediction (continuous value, weather, stock price, traffic)
+      - Clustering
+        - No predefined classes, Intra-cluster similarity, inter-cluster dissimilarity
+      - Anomaly detection
+        - Differ from the "norm", may be error, noise, fraud, extreme events
+      - Trend and Evolution Analysis
+        - Changes over time (overall trend, periodical patterns, anomalies)
+        
+        
+### Data Mining Pipeline
+  -  Key Components: 
+    - Data understanding: before you do anything, look at summaries, understand what data/attributes you have
+      - What types of data do we have? (strings, integers, etc.)
+      - What do they look like (data shape, maxes and mins)
+      - Statistics and visualization (First order, variance, means)
+      - Similarity vs. dissimilarity 
+      - General patterns vs. anomalies
+    - Data preprocessing: change raw data into the form you need for your objective
+      - Deal with potential issues, E.g. missing data, inconsistencies
+      - Preparing data for the mining process, i.e., cleaning, integration, transformation, reduction
+      - No good data, no good data mining, gotta do your due diligence to ensure the data you're using is quality.
+    - Data warehousing: Handles data management, where you keep the data
+      - Pulling data from the warehouses
+      - Data cube and OLAP (multi-dimensional data management)
+      - Data warehouse architecture
+    - Data Modeling: Modeling (neural networks, regressors, etc.)
+      - Frequent pattern analysis, Classification, prediction, clustering, anomaly detection, trend and evolution analysis
+    - Pattern evaluation:  Evaluate patterns, analyze results
+      - Finding interesting patterns from data (interesting: new, valid, generalizable, useful, explainable)
+      - Evaluation metric: 
+        - Accuracy, error rate, false positive/negative rate, efficiency, latency..
+      - Model selection
+    
+    
+### Data Mining Examples
+  - Data mining in the real world
+    - Integrated views: Data, application, knowledge, technique
+    - Data mining pipeline
+      - Data understanding <-> preprocessing <-> warehousing <-> modeling <-> evaluation
+    - $\textbf{Analytical reasoning}$
+      - Methods to each of the data mining pipeline tasks
+    - Examples
+      - Business intelligence
+        - Customers, products, logistics, promotion, fraud
+      - Cyberspace 
+      
+        - Service providers, online social media, security
+    
+    
+### Major Issues, Ethics, Resources
+  - Major Issues in Data Mining
+    - Diverse data -> Diverse knowledge
+    - Data quality issues (no good data = no good data analysis)
+    - Supervised vs. unsupervised learning
+    - Performance evaluation (for models)
+    - Effectiveness vs. Efficiency
+    - Incremental, interactive mining
+      - Not just taking one snapshot of the data, you keep getting new data (streaming data)
+      - Interactive: Data modelling as a non-blackbox process, interactive with users and domain experts
+    - Integration of domain knowledge
+    - Visual analytics
+    - Privacy-Preserving mining (May need to use sensitive data, focus is finding ways to ensure privacy while still getting useful knowledge)
+  - Data Ethics
+    - Note: Data ethics is in each step of the data product life cycle: Funding, motivation, project design, data collection and sourcing, analysis, interpretation, communication and distribution
+    - Data ownership:
+    - Privacy, anonymity
+    - Data and model validity
+    - Data and model bias (algorithmic fairness): if not careful, dataset or modelling process can introduce bias, information may be representative of a subset, and then the model may bias towards that subset.
+    - Interpretation, application, societal consequence
+      - Output or results may be interpreted differently by different people
+  - Resources
+    - ACM SIGKDD 'www.kdd.org'
+    
