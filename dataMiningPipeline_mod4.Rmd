@@ -1,0 +1,115 @@
+---
+title: "DataMiningMethods_mod3"
+author: "Sean Guglietti"
+date: "2025-11-22"
+output: html_document
+---
+
+# Data Warehousing - Data  Mining Pipelines Module 3
+
+### OLTP vs. OLAP
+  - William H. Inmon -- " [Data Warehousing is] A subject-oriented, integrated, time-variant, and nonvolatile collection of data in support of management's decision-making process.
+    - Separated from operational data
+    - Focused on data-friven decision support
+  - Key characteristics
+    - Subject-oriented
+      - E.g., stores, customers, products, students, courses
+      - Focuses on specific subjects, ignore unrelated ones
+    - Integrated (multiple data sources)
+      - E.g., new store location: customers, businesses, traffic
+      - Heterogeneous sources, data cleaning and integration
+    - Time Variant
+      - Traffic information in the past 5-10 years for example
+      - Historical data, longer time span, timestamped data
+    - Nonvolatile (typically don't update in place)
+      - Typical data operations: initial loading, append, read
+      - Separate from operational data, not updated in place
+  - OLTP (Online Transactional Processing):
+    - Transaction-oriented tasks: bank transfer, purchases, orders, student enrolling, etc.
+    - Daily operations: insert, update, delete
+    - Goal is to support those operations
+    - Purpose: To control and run fundamental business tasks
+    - Data reveals: a snapshot of ongoing business processes
+    - Inserts and Updates: Short and fast, initiated by end users
+    - Queries: Relatively standardized and simple queries, returning relatively few records
+    - Speed: Typically very fast
+    - Space: Can be relatively small if historical data is archived
+    - Design: Highly normalized, many tables
+  - OLAP (Online Analytical Process): 
+    - Complex queries on historical data
+    - Data analysis for insights and decision making
+    - Purpose: Help with planning, problem solving, and decision support
+    - Data reveals: Multi-dimensional views of various kinds of business activities
+    - Inserts and updates: Periodic long-running batch jobs refresh data
+    - Queries: Often complex, involving aggregations
+    - Speed: Depends on data involved, batch refreshes may take hours
+    - Space: Larger due to the existence of aggregation structures and historical data
+    - Design: Typically de-normalized with fewer tables, use of star and/or snowflake schemas
+    
+### Data Warehouse, Data Cube
+
+  - Data warehouse model
+    - Fact (e.g., sales) vs. dimension (e.g., item)
+    - Star Schema: One fact table, multiple dimension tables
+    - Snowflake Schema: One fact table, multiple levels of dimension tables
+      - Multiple layers of linking
+    - Fact constellation Schema: Multiple fact tables, shared dimension tables
+  - Examples:
+    - Star Schema: 
+      - Fact: Sales (Customer, item, time)
+      - Dimension: Customer (Name, address, DOB)
+      - Dimension: Time (Year, month, date)
+      - Dimension: Item (SKU, Price, Name)
+    - Snowflake Schema
+      - Fact: Sales (Customer, item, time)
+      - Dimension: Customer (Name, address, card)
+        - Sub-Dimension: Card (Number, exp date, CVC)
+    - Fact Constellation Schema
+      - Fact: Sales
+      - Dimension: Item
+      - Fact: Shipping
+        - Shipper Dimension Table
+      - Sales and Shipping Fact Tables link to the Item Dimension table
+  - Data Cube
+    - Multi Dimensional Data model
+      - Dimensions: Cube attributes (i.e., year, product, color)
+      - Facts: Numeric measure (i.e., Sales volume, value)
+    - Cube operations
+      - Roll-up: aggregate along certain dimensions (i.e., add up along the years, or categories of items or something)
+      - Drill-down: Take specific information and go deeper (annual information -> monthly/daily information)
+      - Slicing: Considering only certain values for a certain dimension
+      - Dicing: Only care about a certain range in dimensions, looking at a sub-cube
+      - Pivot: Transforms, changes the viewpoint, instead of year vs. store location, it may be store location vs. categories of items.
+
+### Data Cube Computation
+  - Lattice of Cuboids
+    - Go from 4-D cuboid (one with time, item, location, supplier) and do the roll up operation on one dimension to pare it down to a 3-D cuboid (i.e., aggregate location, now you have time, item, supplier)
+    - Base Cuboid -> Full Materialization: Pre-compute all cuboids and cells
+      - Might be too much if there are too many dimensions.
+      - $\textbf{No materialization}$: No precomputation, on-demand computation
+        - No wasted effort, only do what you specifically need.
+      - Partial materialization
+        - Heuristically pre-compute some cuboids and cells
+          - Heuristically as in if you have domain knowledge, or past user demands to proactively precompute some likely-to-be-needed cuboids
+    - "Iceberg" Cube
+      - Only a small tip may be "above water"
+        - Minimum support, only compute cuboid cells that are above a certain threshold (i.e., >10k in sales)
+    - Multiway array aggregation:
+      - Bottom-up computation
+        - Simultaneously aggregate along multiple dimensions (i.e., ABC => AB, AC, BC)
+        - Still a full cube materialization, i.e., not scalable for high dimensions.
+
+### Data Warehouse Architecture
+  - Starting point: Data Sources: 
+    - Might have: Flat files; E.g., CSV; Operational systems; Customer Relationship Management system; Enterprise Resource Planning system; 
+      - Data can be structured, semi-structured, unstructured
+  - Next point: Staging 
+    - ETL:
+      - Extract data from various data sources
+      - Transform data (integrating, transforming, normalizing, reducing, etc.)
+      - Load data into the data warehouse
+  - Once in the data warehouse:
+    - We have:
+      - Raw data, meta data (describing data, preprocessing, etc.), summary data
+      - Data marts: subsets with specific focuses
+      - Supports analysis, reports, data mining.
