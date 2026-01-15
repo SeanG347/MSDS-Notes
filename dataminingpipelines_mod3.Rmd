@@ -1,0 +1,136 @@
+---
+title: "DataPipeline_mod3"
+author: "Sean Guglietti"
+date: "2025-11-18"
+output: html_document
+---
+
+# Data Mining Pipeline Module 3
+
+### Data Quality Issues and Causes
+
+  - Data Pre-processing
+    - Find potential issues with data, such as missing data, errors, inconsistency, availability
+    - Preparing for the mining process: Data cleaning, integration, transformation, reduction
+    - $\textbf{No good data = No good data mining}$
+  - Data quality
+    - Relevance: Need data that is relevant to your task
+    - Accessibility: Need to be able to access the specific types of data
+    - Interpretability: Does the data have good descriptions to aid in interpretation
+    - Reliability: Data sources/providers, is there good quality control
+    - Timeliness: Want up to date data, don't want to have to wait a bunch
+    - Accuracy: How many errors occur
+    - Consistency: 
+    - Precision
+    - Granularity: Resolution of the data, specifically for spatial/temporal, how small are the units (country level vs. city level vs. km level)
+    - Completeness: Amongst attributes, are entries complete.
+
+### Data cleaning, Data Integration
+
+  - Incomplete data: remove or fill in missing values (global constant, attribute mean, class mean, class mean being not just for the attribute but for the attribute specific to a class, i.e., if you're data concerns different age groups, may want to impute the mean for specifically high school students)
+    - Can also use an estimated value through regression, kNN, probabilistic
+      - kNN: k nearest neighbours
+      - Probabilistic: estimate most likely value
+      - Clustering, group data into clusters, detect and remove outliers.
+  - Noisy: Smooth noisy data, identify/remove errors/outliers
+    - Fit data with regression functions (e.g., linear, polynomial, logistic)
+  - Inconsistent: Resolve inconsistencies.
+    - Semantic-based checking
+      - Metadata, attribute relationships (e.g., age vs. DOB)
+    - Data understanding
+      - Statistical analysis, visualization
+      - E.g., scatter plot
+  - Data integration
+    - Combines data from multiple sources
+      - Entity identification (e.g., users, items, garnered from matching user IDs for example)
+      - Redundant Data: Identify redundant data
+      
+### Correlation Analysis
+  - Numerical attributes: correlation coefficient:
+    - $r_{A,B} = \frac{sum{(a_i - \bar{A})(b_i - \hat{B})}}{N\sigma_A\sigma_B}$
+  - Nominal attributes: chi-square test
+    - $\chi^2 = \sum{\sum{\frac{(o_{ij} - e_{ij})^2}{e_{ij}}}}$
+    - $e_{ij} = \frac{count(A=a_i)xcount(B=b_j)}{N}$
+      
+
+### Data Normalization
+  - Data transformation techniques
+    - Smoothing: Noise removal/reduction
+    - Aggregation: e.g. cities => state (n-to-1)
+    - Generalization: e.g. city => state (1-to-1)
+    - Normalization: feature scaling
+      - For continuous attributes, we can go to a literally normal scale (i.e., sd's from  the mean)
+    - Discretization: continuous => intervals
+      - Allows you to look at patterns in interval granularity
+    - Attribute construction from existing ones (think Batting average -> slugging)
+      - Find new weights for slugging, try to find out more statistically rigorous weights for walks, singles, doubles, triples, home runs as they pertain to runs scored/created (this is the conceptualization for wRC+)
+    - Normalization:
+      - Rescaling (min-max normalization)
+        - $ v' = \frac{v-min}{max-min} (max' - min') + min'$
+          - If you wanted to rescale to [0,1] note that max'-min' = 1 and min' = 0
+      - Mean normalization:
+        - $v' = \frac{v' - mean}{max-min}$
+      - Standardization:
+        - $v' = \frac{v-mean}{stdev}$
+      
+
+### Discretization, Attribute Selection
+  - Discretization takes continuous attributes into intervals/discrete attributes
+    - i.e., income => 10K increments
+  - How to do:
+    - Split or merge recursively
+    - Automated way to discretize 
+    - Supervised or unsupervised: class labels
+      - Supervised: you are specifying the intervals
+        - Pre-determined class labels
+        - Entropy-based interval splitting
+          - lower entropy means "purer" class distribution (more similar class distribution)
+          - different splitting points have different entropy, choose lowest
+        - $X^2$ analysis-based interval merging
+          - lower $\Chi^2$ value means class is independent of interval (better for them to be merged together)
+      - Unsupervised: just looking at data values and figuring out what should be groupe
+        - Binning and histogram analysis, equal width, equal frequency
+        - Clustering analysis (using clusters to identify intervals)
+        - Intuitive partitioning (Based on general understanding, may just have intuitive idea on how to partition)
+  - Data reduction
+    - Large data takes a long time to mine
+      - Reduce data to make it more efficient
+    - Should still find similar patterns (this is contingent on your data reduction process)
+    - Dimensionality reduction (lowering number of attributes)
+      - Attribute selection: 
+        - Forward selection (keep adding the most informative, informative according to a metric, attributes)
+        - Backward elimination (keep removing the least informative attributes)
+        - Feature engineering (domain knowledge, decision tree induction, ...)
+          - Decision tree induction: gives a hierarchy of most informative attributes
+    - Numerosity reduction (lowering number of objects)
+          
+### Dimensionality/Numerosity Reduction
+  - For reducing dimensionality (attributes), principal component analysis
+    - Principal components: orthogonal vectors (in attribute space) that capture most of the information in the dataset
+    - Very simple example: Imagine a corrplot with a strong positive trend and some variance about the line, The 1st PCA dimension is the trendline itself, and the 2nd would be an orthogonal vector which captures some of the variance
+    - Wavelet transformation:
+      - Linear signal processing, multi-resolution
+        - Stores a small fraction of the strongest wavelet coefficients
+          - Takes original signal and turns it into some linear combination of wavelets
+        - You can reconstruct images even if you only store a small fraction of the strongest wavelet coefficients. Only need some "wavelet coefficients"
+  - Numerosity Reduction
+    - Parametric methods:
+      - Assume the data fits a certain model
+      - Estimate model parameters
+        - e.g., linear/multi-linear/log-linear regression
+      - Once you have a reasonable way to fit the data to a particular model, you can just keep the model parameters
+    - Non-parametric methods
+      - Do not assume a certain model, use fewer/smaller data representations.
+      - Examples
+        - Sampling:
+          - Select a representative subset of data points
+            - Note you can/should use different samplingm ethods for different scenarios
+              - Random sampling with replacement (can grab the same data point multiple times?)
+              - Random sampling without replacement
+              - Cluster sampling (all from similar clusters/classes)
+              - Stratified sampling (all from different clusters/classes
+        - Aggregation: daily sales => monthly sales, or vehicles by city => by state
+        - Histogram: Store bucket intervals and frequencies
+        - Clustering: Store cluster representations, centroid and radius
+
+
