@@ -1,0 +1,181 @@
+---
+title: "GLM_Mod1"
+author: "Sean Guglietti"
+date: "2025-10-11"
+output: html_document
+---
+
+# Generalized Linear Models
+
+### Intro (module 1)
+
+- Recall MLR assumptions:
+  - Linearity: (E($\hat{Y}$)=X$\beta$)
+  - Independence: Cov($\epsilon_i$, $\epsilon_j$) = 0, i $\neq$ j
+  - Homoskedasticity: Constant variance for error terms
+  - Normality: $\epsilon_i$ $\sim$ N(0, $\sigma^2$)
+  
+- Example:
+  - Researchers interested in predicting whether a political candidate will win an upcoming election.
+    - Response variable is binary: win or lose.
+    - Important predictors might be:
+      - Amount of money spent on campaign
+      - Amount of time spent campaigning
+      - Whether or not the candidate is an incumbent
+  - Note the constant variance, and normality of the response assumptions are broken.
+    - The response is binomial!
+      - $Y_i \sim binomial(n,p_i)$ for i = 1,...,n, and let y = 0,1,...n
+      - Then:
+        - PMF: $P(y_i = y) = {n \choose y} p_i^y(1-p_i)^{n-y}$
+        - Mean:$ E(y_i) = np_i$
+        - Variance: $Var(y_i) = np_i(1-p_i)$
+  - We need to use $\textit{binomial regression}$, which is a special case of logistic regression
+    - Binomial regression is a specific type of $\textit{generalized linear model}. Other GLMs allow for other types of distributions, such as Poisson
+    - GLMs extend the lm framework to non-normal responses (e.g., counts)
+      - Nonlinear structure. Nonparametric and semiparametric models allow us to capture data where the predictors are nonlinearly related to the response
+      - Correlation structure. Mixed effects models account for data with a grouped, or hierarchical structure
+      
+### Components of a GLM
+
+  - In lin reg. $E(Y_i) = X\beta$,
+    - In non-linear/generalized linear models, $E(Y_i) = f(X\beta)$
+  - Let $x_j = (x_{1,j},...,x_{n,j})$, j = 1,...,p be a set of predictors; $Y = (Y_1,...,Y_n)^T$ be a response, and $\beta = (\beta_0,\beta_1,...,\beta_p)^T$ be a vector of parameters. 
+    - A GLM has three components:
+      1. A random component (response)
+      2. A systematic component $\eta$
+        - Predictors should explain variability, and why. In LM's, we think the reason is linear.
+      3. Link function
+        - Describes how the mean response $\mu = E(Y)$ is linked to $\eta$
+          - g($\mu$) = $\eta$ = $\beta_0 + \beta_1X_{i1} +... + \beta_pX_{ip}$
+        - We require a monotone and continuous and differentiable function. But there are some convenient choices for certain data types.
+
+
+### The Exponential family of distributions
+  - $\textbf{Definition:}$ Y is a random variable from the exponential family if the distribution can be written as:
+    $$ f(y; \theta,\phi) = e^{\frac{y\theta- b(\theta)}{a(\phi)} + c(y,\phi)} $$
+  - Example: Binomial(n,p)
+    - f(y;n,p) = P(Y = y;n,p) = ${n\choose y}p^y(1-p)^{n-y}$
+    - $$f(y;n,p) = e^{ylog(\frac{p}{1-p}) + nlog(1-p) + log(n\choosey)}$$
+      - log(p/1-p) = theta, nlog(1-p) = b(theta), log($n \choose y$) = c(y,$\phi$)
+      - Thus: $\theta$ = log($\frac{p}{1-p}$), implying that p = $\frac{e^\theta}{1+e^\theta}$
+  - Exponential family mean and variance
+    - $\mu = E(Y) = b'(\theta)$
+    - $\sigma^2 = Var(Y) = b''(\theta)\phi$
+  - Takeaways:
+    - Response must be from the exponential family
+    - Why? The canonical parameter plays a role ($\theta$)
+    - Many of the common distributions (binomial, Poisson, normal, exponential) are from the exponential family.
+
+
+### Introduction to Binomial Regression
+
+- Goals:
+  - Predict or explain E($Y_i$) = $\mu$ = $n_ip_i$, using a covariate class, $x_{i,1},...,x_{i,p}$
+  - Predict or explain $p_i$ using a covariate class, $x_{i,1},...,x_{i,p}$
+- Logistic regression: 
+  - Special case where:
+    - $Y_i \sim binomial(1,p_i)$
+- Binomial regression in terms of GLM:
+  -Random component: Each $y_i$ is a realization of $Y_i \sim binomial(n_i,p_i)$
+    - y's are independent
+  - Systematic component:
+    $ \eta_i = \beta_0 + \beta_1x_{i,1} + \beta_2x_{i,2} + ... + \beta_px_{i,p}$
+      - Have to link systematic component to the probability of a success, p
+  - Link function: 
+    - Logit (most popular/default in R)
+      - g($p_i$) = log($\frac{p_i}{1-p_i}$) = $\eta_i$ 
+        - Relates canonical variable ($\theta$) with linear predictor $\eta$
+    - Probit
+      - g($p_i$) = $cdf^{-1}(p_i)$
+
+### Binomial Regression Parameter Estimation
+
+- Parameter estimation - Maximum likelihood estimation
+  - Marginal pmf
+    - Start with above pmf for binomial
+  - Joint pmf
+    - Product operator from i = 1 to n
+  - Likelihood function
+  - Log-likelihood function
+  - Maximize
+
+### Interpretation of Binomial Regression
+
+- Definition: Let event E have probability p of occurrence. Then the odds in favor of E is defined as $o_E$ = $\frac{p}{1-p}$
+  - Example: Biased coin has P(H) = 3/4 and P(T) = 1/4, the odds of event E = the coin lands on heads twice in two flips is:
+    - p = (3/4)(3/4), $o_e$ = (3/4)(3/4)/(1-(3/4)(3/4))
+      - i.e., in odds, the probability is the probability of the EVENT, which is going to be specified, it's not always p = P(H).
+  - $\textbf{In Binomial Regression:}$
+    - $\beta_0$ represents the $\textbf{log odds}$ of success when all predictors are equal to zero.
+    - A unit increase in $x_j$ with all other predictors held constant increases the $\textbf{log odds}$ of success by $\beta_j$. Or, a unit increase increase in $x_j$ with all other predictors held constant increases the $\textbf{odds}$ of success by $e^{\beta_j}$.
+    
+    
+### Binomial Regression in R
+
+- Data: Office Occupancy data
+  - 1. Occupancy: 0 for not occupied, 1 for occupied status
+  - 2. Temperature: in Celsius
+  - 3. Relative Humidity: as a percentage
+  - 4. Light: measured in Lux
+  - 5. CO2: in ppm
+- Goal: to predict office occupancy using the predictors
+
+
+- Reading in the data
+    library(RCurl)
+    library(ggplot2)
+    url = getURL("...")
+    occ = read.csv(text=url)
+    head(occ)
+    summary(occ)
+$\textbf{Making the model}$
+  - glmod = glm(Occupancy ~ Temperature + Humidity + Light + CO2, data = occ, family = "binomial") 
+  - summary(glmod)
+  
+  - From Coefficients:
+    - Garnered by MLE:
+      - Given:
+        - Intercept = -29
+          - This is $\beta_0$, means that assuming the model is correct, the average log-odds of an office being occupied, having all other predictors set to 0, the log odds are -29, note $e^{\beta_0}$ (the actual odds), are roughly equal to zero.
+        - Temperature = -0.33
+        - Humidity = 1.35
+        - Light = 0.02
+          - Assuming our model is correct, a 1 Lux increase in light leads to a 0.02 increase in log odds of the office being occupied, in terms of actual odds, it would be equal to 1.02, note that that is multiplicative, not additive.
+        - CO2 = -0.001
+        
+    $$ e^{\hat{\eta}} = e^{\hat{\beta_0} + \hat{\beta_1}x_1 + \hat{\beta_2}x_2 + \hat{\beta_3}x_3 + \hat{\beta_4}x_4} $$
+    - note an increase in light by one Lux means increasing $x_3$ by one, leading to:
+$$ e^{\hat{\eta}} = e^{\hat{\beta_0} + \hat{\beta_1}x_1 + \hat{\beta_2}x_2 + \hat{\beta_3}(x_3+1) + \hat{\beta_4}x_4} $$
+$$ e^{\hat{\eta}} = e^{\hat{\beta_3}}e^{\hat{\beta_0} + \hat{\beta_1}x_1 + \hat{\beta_2}x_2 + \hat{\beta_3}(x_3) + \hat{\beta_4}x_4} $$
+  - Which is why the effect is multiplicative to the odds.
+  
+  
+### Assessing fit of binomial regression model
+
+- Deviance as a measure of goodness of fit:
+  - Generally, the deviance of a GLM is -2 times the log likelihood of the GLM evaluated at the MLEs:
+    $$D = -2\ell(\, \widehat{\boldsymbol\beta} \,) = -2\sum^n_{i=1} \bigg[ y_i\eta_i - n_i\log\big(1 + e^{\eta_i}\big) + \log{n_i \choose y_i}\bigg]$$
+    
+    Special cases:
+      - Null deviance
+      
+      \begin{align*}
+D_{null} &= -2\sum^n_{i=1} \bigg[ y_i\eta_i - n_i\log\big(1 + e^{\eta_i}\big) + \log{n_i \choose y_i}\bigg] \\
+&= -2\sum^n_{i=1}\bigg[ y_i\log\bigg(\frac{\bar{y}}{1 - \bar{y}} \bigg) - n_i\log\big(1 + \exp{\bigg\{ {\log\bigg(\frac{\bar{y}}{1 - \bar{y}} \bigg)} \bigg\} }\big) + \log{n_i \choose y_i}\bigg] \\
+&= -2\sum^n_{i=1}\bigg[ y_i\log\bigg(\frac{\bar{y}}{1 - \bar{y}} \bigg) - n_i\log\big(1 + \bigg(\frac{\bar{y}}{1 - \bar{y}} \bigg)\big) + \log{n_i \choose y_i}\bigg]
+\end{align*}
+
+      - Saturated deviance: deviance of the saturated model, i.e., the model where each data point has it's own parameter, the MLE is $\widehat p_i = y_i\big/n_i$
+      \begin{align*}
+D_{sat} &= -2\sum^n_{i=1} \bigg[ y_i\eta_i - n_i\log\big(1 + e^{\eta_i}\big) + \log{n_i \choose y_i}\bigg]  = -2\sum^n_{i=1}\bigg[ \bigg] 
+\end{align*}
+
+      - The residual deviance: Difference between the deviance for a given model of interest and the saturated model
+      
+      
+      \begin{align*}
+D_{resid} = D_{p} - D_{sat} &=  -2\sum^n_{i=1}\bigg[{y_i}\log\bigg(\frac{y_i}{\widehat y_i} \bigg) + (n_i - y_i)\log\bigg(\frac{n_i - y_i }{ n_i - \widehat y_i}\bigg)  \bigg] 
+\end{align*}
+
+
+  - Note that the residual model follows a chi-squared distribution with degrees of freedom (n-p+1)
