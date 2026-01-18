@@ -1,0 +1,212 @@
+---
+title: "Mod2_GLM"
+author: "Sean Guglietti"
+date: "2025-10-12"
+output: html_document
+---
+# Poisson Regression (Regression for counts)
+
+
+### Poisson Regression: A new modle for count data
+
+- Each $y_i$ is a realization from a Poisson distributed random variable
+  - P($Y_i = y_i) =\frac{e^{-\lambda_i}\lambda^{y_i}}{y_i!}$
+  - Random component (conditioned on the predictors):
+    $$Y_i \sim Poisson(\lambda_i)$$
+    - Mean: $\mu_i= E(y_i) = \lambda_i$
+    - Variance: $\sigma_i^2 = Var(y_i) = \lambda_i$
+    - Canonical Parameter: $\theta = log(\mu_i) = log(\lambda_i)$
+  - Systematic component
+    $$\eta = \beta_0 + \beta_1x_1 + \beta_2x_2 + ... + \beta_px_p$$
+    - Used to predict or explain mean of Poisson variable that is the response
+    - Can't use estimator of $\eta$ to directly predict $\mu_i$, no reason that linear predictor has to be positive (it has to be for a rate), need to link mean to systematic component.
+  - Link function g describes how the mean response $\mu$ is linked to $\eta$
+    $$ g(\lambda_i) = log(\lambda_i) $$
+    $$ \eta_i = g(\lambda_i) = log(\lambda_i) = \theta $$
+    - If trying to predict rate parameter, we can invert link function, i.e.:
+    $$ \lambda_i = e^{\eta_i}$$
+    
+- Poisson counts number of occurrences over particular region of time or space (exposure period). Suppose we want to construct a model which predicts the number of time an individual is admitted to a hospital. Parameters might include: height, weight, gender, diabetes, etc.. Suppose in the data, individual 3 went 0 times in a month, but individual 1 went 3 times over a year, there is therefore a difference in exposure period, that information really matters, as individual 1 had a longer period of time for that to occur. We must include that offset term. 
+  - The mean $\mu_i = \lambda_i$ is really a count over the exposure:
+    $\mu_i = \lambda_i = \frac{count_i}{exposure_i} = \frac{y_i}{e_i}$
+    - Using the log-link function, we see that:
+      - $g(\lambda_i) = log(\lambda_i) = log(\frac{y_i}{e_i}) = log(y_i) - log(e_i)$
+      - $\textbf{In R:}$
+        - glm(Response ~ Predictor + ... + offset(log(exposure)), family = "poisson",...)
+
+
+### Poisson Regression Parameter Estimation
+
+- Parameter estimation - Maximum likelihood estimation
+  1. Marginal pmf
+    - $$ Marginal pmf. P(Y_i = y_i) = \frac{e^{-\lambda_i}\lambda^{y_i}}{y_i!}, y_i = 0,1,2,...,\lambda_i$$
+  2. Joint pmf (note link function is log($\lambda_i$), thus $\lambda_i = exp(\eta)$)
+    - $$f(y;\lambda) = \Pi_{i=1}^{n}{\frac{e^{-\lambda_i}\lambda^{y_i}}{y_i!}}$$
+  3. Likelihood function
+    - $$L(\beta) =  \Pi_{i=1}^n{\frac{exp(-e^{\eta_i})exp(y_i\eta_i)}{y_i!}}$$
+  4. Log-likelihood function
+    - $$log(L(\beta)) = \sum_{i=1}^n{y_i\eta_i - e^\eta_i - log(y_i)}$$
+  5. Maximize!
+    - Non-linear, R will use iterative techniques to maximize
+
+
+### Interpreting the Poisson Regression Model
+
+- Again (Note these are all MLE estimators):
+  - $$ g(\lambda_i) = log(\lambda_i) = \eta_i = \beta_0 + \beta_1x_1 + ... + \beta_px_p$$
+- Interpreting
+  - $\beta_0$: $e^{\beta_0}$ can be interpreted as the mean of the response when each predictor is set to zero.
+  - $\beta_j$: $e^{\beta_j}$ can be interpreted as the multiplicative increase in the mean of the response for a one-unit increase in $x_{i,j}$, holding all other predictors constant.
+    - i.e., if we increase the value of $x_{i,j}$ by one unit we get:
+      - $$e^{\beta_j}e^{\eta}$$, where $e^{\eta} = \lambda$
+
+### Poisson Regression on Real Data in R
+  - Dataset in example: Bicycling counts
+    - Column name and brief description:
+      - date: date of count
+      - day: day of week
+      - temp_h: high temp
+      - temp_l: low temp
+      - precip: total amount of precip in inches
+      - bb: num of cyclists at Brooklyn bridge over 24 hours
+      - mb: num of cyclists at Manhattan bridge over 24 hours
+      - wb: num of cyclists at Williamsburg Bridge over 24 hours
+      - qb: num of cyclists at Queensboro bridge over 24 hours
+      - total: num of cyclists over all bridges over 24 hours
+      
+    - Loading data
+      -library(RCurl)
+      -urlfile = paste0("url")
+      -url = getURL(urlfile)
+      -bike = read.csv(text = url, sep = ",", header = TRUE)
+        - check for NA
+      -sum(is.na(bike$mb))
+      -head(bike,10)
+        - When analyzing data, we see in the precip factor some entries as 'T', which is non-numeric and stands for "trace precipitation", we will treat this as 0 for now:
+          - library(tidyverse)
+            - changes level of factor
+          - bike = bike %>%
+            mutate(precip = fct_recode(precip,"0"="T"))
+            
+            - see what the classes are for the different features
+          -sapply(bike, class)
+              -we see everything is numeric besides precip and day of the week
+              
+    - Changing date to Data class, and
+      - bike = bike %>%
+        - mutate(date = as.Date(as.character(date),format='%m/%d)) %>%
+        - mutate(precip = as.numeric(as.character(precip)))
+    - fix the year of the dat variable
+      - library(lubridate)
+      - bike$date = ymd(as.character(bike$date)) - years(3)
+    - Splitting:
+      - set.seed(8585)
+      - bound = floor(nrow(bike)*0.8)
+      - df = bike[sample(nrow(bike)),]
+      - df_train = df[1:bound,]
+      - df_test = df[(bound+1):nrow(bike),]
+    - Fitting:
+      - glm_bike = glm(mb ~ precip + temp_h + temp_l + day, data = df_train, family = poisson)
+    - Analysis
+      - We get -0.68 for the $\beta_{precip}$ value, this means that for a one inch increase in precipitation, we would expect the mean number of bikes across the Manhattan bridge to be multiplied by $e^(-0.68) \sim 0.5$, meaning roughly half the number of bikes.
+  
+    - Verifying interpretation
+      - newdata = df_test[2,]; newdata['precip'] = newdata['precip'] + 1; newdata
+      - predict1 = predict(glm_bike, df_test[2,],type = "response")
+      - predict2 = predict(glm_bike, newdata, type = "response")
+    
+    - Changing precipitation from one inch to the standard deviation of precipitation:
+      - df_train_scale = df_train $>$ mutate_at(c("precip","temp_h","temp_l"),scale)
+
+    - Model correctness
+      - Plotting
+        - n_train = length(df_train$mb)
+        - n_test = length(df_test$mb)
+        - mu_train = predict(glm_bike, df_train, type = "response")
+        - y_train = df_train$mb
+        - df_test_predict = data.frame(y_train, mu_train)
+        - p = ggplot(df_test_predict) + geom_point(aes(y_train,mu_train))
+        - p = p + geom_smooth(aes(y_train, mu_train), method = "lm", se = FALSE)
+        - p = p + geom_abline(aes(intercept = 0, slope = 1))
+      - Analyzing
+        - Plot predicted values against true values (in either training or test set)
+        - If values line up along the line y = x (intercept = 0, slope = 1)
+        - If they're bad they'll scatter a lot, really good, they'll line up along the line y = x.
+          - The regression line fitted through the points can be compared against the y = x line, and show that the data is "systematically off the y = x".
+          - Difference between fitted line through the true vals v predicted plots 
+
+
+
+### Goodness of Fit for Poisson Regression I
+
+- Deviance:
+  $$ D = -2l(\hat{\beta})$$
+  - Where $\hat{\beta}$ is the MLE:
+    $$l(\hat{\beta}) = \sum_{i=1}^n {y_i\hat{\eta}_i - e^{\hat{\eta}_i} - log(y_i!)}$$
+  - Null Deviance:
+    $$ D_{null} = -2\sum_{i=1}^n{y_i\hat{\eta}_i - e^{\hat{\eta}_i} - log(y_i!)}$$
+    
+    $$D_{null} = -2\sum{[y_ilog(\hat{\lambda}_i) - \hat{\lambda}_i - log(y_i!)]}$$
+    $$D_{null} = -2\sum{y_ilog(\bar{y}) - \bar{y} - log(y_i!)}$$
+  - Saturated Deviance (parameter for every data point, hence ($\hat{\lambda}_i = y_i)$)
+    $$ D_{sat} = -2\sum{[y_ilog(y_i) - y_i - log(y_i!)]}$$
+    
+  - Residual Deviance
+    $$ D_{resid} = D_p - D_{sat} $$
+      - Where $D_p$ corresponds to the model we have fit.
+      $$D_{resid} = -2\sum{[y_ilog(\hat{\lambda}_i) - \hat{\lambda}_i - log(y_i!)]} + 2\sum{[y_ilog(y_i) - y_i - log(y_i!)]}$$
+      $$D_{resid} = 2\sum{y_ilog(y_i/\hat{\lambda}_i) - (y_i - \hat{\lambda}_i)}$$
+      
+        - Follows chi-squared, with degrees of freedom n - (p+1) degrees of freedom
+        
+  - Hypothesis tests:
+    $$H_0: The model with p parameters fits well enough$$
+    $$H_1: the model with p parameters does not fit well enough$$
+    - In R:
+      - For summary of a glm: we get Null and Residual deviances at bottom, we take the value of the deviance, find the area under the curve with the specified degrees of freedom and residual deviance value 
+  - Deviance residuals
+    $$ d_i = sign(y_i - \hat{\lambda}_i)\sqrt{2[y_ilog(\frac{y_i}{\hat{\lambda}_i} - (y_i - \hat{\lambda}_i))]}$$
+    $$ d_i \sim N(0,1)$$
+    
+    - If we plotted di vs $\eta_i$, we should get a linear trend, and if its non-linear we may need another factor
+    
+  - Alternative to Deviance:
+    - Pearson's $\chi^2$
+      $$ \chi^2 = \sum_{i=1}^n {o_i - E_i}^2/E_i \sim \chi^2(n-p+1)$$
+        - Where $o_i$ is observed data, so $y_i$ in Poisson case.
+        - $E_i$ is expected value, so the mean, so $\hat{\lambda}_i$
+        - A large $\chi^2$ is evidence against the null that the model fit is sufficient.
+        
+      - Note the sum looks like residuals, with the $\lambda$'s corresponding to est. mean and est. variance, and thus:
+        $$ p_i = \frac{y_i - \hat{\lambda}_i}{\hat{\lambda}_i}$$
+
+
+### Overdispersion
+
+- Overdispersion is defined as when the count response data has variance greater than the mean. 
+  - Underdispersion is thus defined as when the mean is greater than the variance of the response.
+
+- Real overdispersion vs. Apparent overdispersion
+  - Real overdispersion:
+    - Zero inflation/correlation
+      - Zero inflation: observed response just has a lot more zero's
+      - Spatial or temporal correlation, in some context the variability is only small portion of variability, other things may include complex correlation structure, might model cases of disease in country, spread may depend on hotspots/geographical, hence not including spatial data would likely show overdispersion
+  - Apparent overdispersion
+    - Missing predictors, outliers, bad link function
+    
+- Overdispersion modelling:
+  - $E(Y_i) = \lambda_i$
+  - $Var(Y_i) = \lambda_i\phi$
+    - If $\phi$ = 1, just normal model, if it's greater than 1 it accounts for overdispersion.
+  - Estimating $\phi$
+    - $\hat{\phi} = \frac{\sum{\frac{(y_i-\hat{\lambda}_i)^2}{\hat{\lambda}_i}}}{{n-(p+1)}}$
+  - Overdispersion solutions:
+    - Quasilikelihood methods
+      - se($\hat{\beta}_j) = se(\hat{\beta}_j)\sqrt{\hat{\phi}}$
+      - Presence of overdisperion doesn't change validity of MLEs
+    - Negative Binomial regression:
+      - Advantage of introducing second parameter
+      - True lilkelihood based method as opposed to quasilikelihood
+     
+    
+    
