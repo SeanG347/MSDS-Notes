@@ -1,0 +1,150 @@
+---
+title: "Mod3_GLM"
+author: "Sean Guglietti"
+date: "2025-10-13"
+output: html_document
+---
+
+# Nonparametric Regression
+
+### Introduction to nonparametric regression models
+
+- Motivation:
+  - A $\textit{parametric}$ statistical model is a family of probability distributions with a finite set of parameters.
+    - Example: The normal regression model:
+    $$ \textbf{Y} \sim N(X\textbf{\beta},\sigma^2I_n) $$
+    - Response -> Y
+    - Mean -> X$\beta$ (p+1 parameters)
+    - Variance/Covariance matrix -> single parameter where the mean has p+1 parameters.
+      - Overall p+2 parameters to estimate
+    - Any model with a finite number of parameters is a parametric model.
+  - A $\textit{nonparametric}$ statistical model is a family of probability distributions with infinitely many parameters:
+    - example:
+      $$ Y \sim N(f(\textbf{x_1},\sigma^2I_n))$$
+      - We see here that the mean is a function.
+        - Suppose f(x) is an arbitrary function that has a domain $x_1 \in [-1,1]$
+          - Since it's arbitrary, we would need infinitely many parameters to properly estimate.
+      - A relatively general form of a statistical modelling problem is:
+        $$\mu_i = E(Y_i) = f(x_{i,1},x_{i,2},...,x_{i,p})$$
+        - in normal regression: $f(\textbf{x}) = \beta_0 + \beta_1x_{i,1} + ... + \beta_px_{i,p}$
+        - in Poisson regression: $f(\textbf{x}) = exp(\beta_0 + \beta_1x_{i,1} + ... + \beta_px_{i,p})$
+      - In nonparametric regression, we try to $\textit{learn}$ f.
+        - What this means: 
+          - We assume f comes from some smooth family of functions. In this case, the set of potential fits to the data is much larger than in the parametric approach.
+          - Try to leave open the class of functions that may fit the data, and try to then pick up on curvature.
+  
+- Advantages vs. Disadvantages
+  - Advantages:
+    - Flexibility (when modelling new data, not sure of law of relationship, nonparametric may be more efficient to learn nature of relationship)
+    - Fewer distributional assumptions (less liable to making incorrect assumptions which make bias)
+  - Disadvantages
+    - Less efficient when structure of relationship is available (if you know a relationship is linear, model it using linear regression)
+    - Interpretation difficulties (easy interpretations for parameter estimations in Poisson regression for example, not so much in nonparametric)
+    - No formulaic way to describe relationship between predictors and response
+    
+    
+### Kernel Estimators
+
+
+### Motivating
+
+- If we add higher order terms for predictors we can get better "fit" for data, up to an order of d. How do we choose d? We keep adding higher order terms and keep adding until we get one that isn't statistically significant.
+  - This does not yield consistent results
+  - And when we choose another predictor to add and add higher order terms for, we then have to find the d for that predictor, and keep adding.
+- Kernel smoothing is a way to do this systematically without having to manually choose the orders for the different predictors.
+  - $\textbf{NOTE:}$ to implement higher order terms in R:
+    - lm(response ~ predictor + I(predictor^2) + I(predictor^3)...)
+  
+  
+### Estimators
+
+$$ Y_i = f(x_i) + \epsilon_i$$
+
+$$ \hat{f}_{\lambda}(x) = \frac{\frac{1}{n\lambda}\sum_{i=1}^nK{\frac{x - x_i}{\lambda}}}{\frac{1}{n\lambda}\sum_{i=1}^n{K(\frac{x-x_i}{\lambda})}} $$
+    
+    
+- Simple weighted local moving average of the response. Above is a weighted average of the response.
+      - K is a function of the bracketed term, and it along with $\lambda$ is the weight.
+      - Define weight term;
+      $$w_i = \frac{1}{\lambda}K(\frac{x-x_i}{\lambda})$$
+      
+    - K is a kernel, it is a nonnegative, real-valued function such that K(x) = K(-x) for all values of x (symmetry) and $\int{K(x)dx} = 1$ (normalization)
+    - $\textbf{Commonly used kernels}$
+      - Uniform/rectangular: $K(x) = 1/2, -1 \geq x \geq 1$
+      - Gaussian/Normal: $K(x) = \frac{1}{2\pi}exp(-\frac{x^2}{2})$
+      - Epanechnikov: $K(x) = \frac{3}{4}(1-x)^2, -1 \geq x \geq 1$
+    - Normal Kernel kinda goated
+  - Lambda is the "bandwidth" of the kernel, or the smoothing parameter, which controls the smoothness or bumpiness of the estimate $\hat{f}$. Large lambda gives smoother fits. Low lambda gives very bumpy fit.
+  - There are subjective decisions in statistical modelling, for example asserting assumptions as true in parametric, and for nonparametric we have to choose a $\lambda$ that seems reasonable.
+    - There are automatic methods for choosing $\lambda$, such as cross-validation, but sometimes it doesn't give you a plausible $\lambda$.
+    
+    
+### Kernel estimation in R
+- z = ksmooth(x = bone$age, y = bone$spnmb, type of kernel = "normal", bandwidth = 1)
+- plot(spnbmb ~ age, data = bone)
+- lines(z, lwd = 3)
+
+### Smoothing Splines
+
+- Given the model $Y_i = f(x_i) + \epsilon_i$, might consider choosing f by minimizing:
+  $$ MSE = \frac{1}{n}\sum_{i=1}^n{(Y_i - f(x_i))^2}$$
+  - Solution is setting everything to $f(x_i) = y_i$, i.e., making MSE = 0.
+    - Smoothing methods navigate balance
+- Smoothing splines:
+  - Instead of jsut minimizing:
+    $$ MSE = \frac{1}{n}\sum_{i=1}^n{(Y_i - f(x_i))^2}$$
+    - We might consider minimizing:
+      $$ s(x) = \frac{1}{n}\sum_{i=1}^n{(Y_i - f(x_i))^2} + \lambda\int{[f''(x)]^2dx}$$
+      - MSE is for fit, and the second, integral term, is smoothness.
+        - If f(x) is linear, second derivative is 0
+        - A function with low curvature has a low second derivative, we need a function that fits well and has low curvature on average.
+        - $\lambda -> inf$: converges to solution (f(x_i) = 0 for all i)
+      - Minimizing yields a "cubic smoothing spline"
+  - $\textbf{A spline}$ is a piecewise function, where each segment is a polynomial.
+  - $\textbf{A cubic spline}$ is a spline where the segment polynomials are each of degree three.
+    - Splines are meant to be continuous and have continuous derivatives.
+  - $\textbf{A smoothing spline}$ is a spline designed to balance fit with smoothness
+  
+- Implementing in R
+  - smooth.spline(x,y,spar = ...)
+    - spar is a function of $\lambda$ in R, a low spar is a low lambda = low smoothness.
+      - Low vals are like spar = 0.5, higher vals are like spar = 1
+    - Automatic methods like cross validation
+
+### Loess: Locally Estimated Scatterplot Smoothing
+
+- Again from the MSE
+  - Constraints:
+    - In lin reg, set f(x) = linear function with $\beta$ and x
+      - Severely restricting potential fits
+    - Replace f(x) with a Taylor expansion about a certain point $x_0$
+      - $$f(x) \sim f(x_0) + \frac{f'(x_0)}{2!}(x-x_0)^2 + .....$$
+        - Note that this can be interpreted as:
+          - $f(x_0) = \beta_0$$
+          - $f'(x_0)$ = $\beta_1$, 
+          - and so on:
+        - Thus we can turn the arbitrary f, to approximating f, to a linear system
+        
+      $$MSE_{Taylor} = \frac{1}{n} \sum_{i=1}^n{(Y_i - \sum_{j=0}^p{\beta_j(x-x_0)^p})^2}$$
+        - This still only estimates around $x_0$, so we should really only use points close to $x_0$. We can improve the model by including a weight function which defines the distance between x and $x_0$:
+        
+    
+$$MSE_{Taylor} = \frac{1}{n} \sum_{i=1}^n{w_i(x-x_0)(Y_i - \sum_{j=0}^p{\beta_j(x-x_0)^p})^2}$$
+      - Example weight function is (1-|x|$^3$)$^3$ if |x| < 1
+      
+  - Advantages  vs. disadvantages
+    - Advantages
+      - Flexible fit, don't need to specify non-linear trends if you don't know it
+      - Relatively simple to implement
+      - Uncertainty quantification
+    - Disadvantages
+      - Can be computationally expensive to calculate all the derivatives
+      - Interpretation can be more difficult
+      - Requires relatively large, densely sampled data
+
+        
+        
+        
+        
+        
+
