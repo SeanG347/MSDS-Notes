@@ -1,0 +1,201 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+## Beyond the Full F-test
+### Lecture 1
+
+- Full F-test tells us:
+  - In context of one-way ANOVA: are there differences for the mean of a continuous response variable across different groups?
+  - If we reject the null -> We now need to look at those differences, could mean every group is different from each other group for example
+  - $\textbf{Planned comparisons vs. Unplanned "post hoc" comparisons}$
+    - Suppose we think that the mean of one group will be greater than the average of the other two means:
+      $$H_0: \mu_2 = \frac{1}{2} (\mu_1 + \mu_2)$$
+      $$H_1: \mu_2 > \frac{1}{2} (\mu_1 + \mu_2)$$
+    - We need to set up a "contrast" from which we will set up a test statistic. This is an example of a Planned comparison, in which we make the test before the testing.
+    - Unplanned "post hoc" comparisons are just tests that are done after the experiment has been run, non-pre-specified hypotheses. Increases type I error.
+    
+    - Data Dredging: Any data analysis that does not take into account multiple comparisons and doesn't adjust type I error rate.
+      - Example: Heart attack rates in NYC
+        - Some heart attack victims were given Aspirin, and another not to (placebo)
+        - Journal wanted to analyze the data to see which subgroups benefitted the most?
+          - But if he went back that would be data dredging -> doing a subsequent analysis that could provide false positives.
+            - Data scientist trolled -> analyzed data with respect to zodiac signs, found that Capricorns received a 100% reduction in risk, whereas Geminis and Leos received no reduction from Aspirin.
+            
+  
+### Lecture 2: Defining Contrasts (for hypothesis testing in the ANOVA model)
+
+- Criteria
+  1. $\alpha$, $H_0$, and $H_1$ must be specified for all tests before data is observed
+  2. Full F-test must be statistically significant
+  3. Contrasts must be orthogonal
+    - At  maximum J-1 orthogonal contrasts, 
+  4. No more than J-1 tests (J is the number of levels) 
+    - Preserves familywise error rate
+
+  - From Espresso example: tests:
+  
+  1.  $$ H_0: \mu_2 = \frac{1}{2}(\mu_1 + \mu_3) vs. H_1: \mu_2 > \frac{1}{2}(\mu_1 + \mu_3)$$
+    
+  2. $$ H'_0: \mu_2 = \mu_1 vs. H'_1: \mu_2 > \mu_1 $$
+
+  3. $$ H''_0: \mu_2 = \mu_1 - 3\mu_3 vs. H''_1: \mu_2 > \mu_1 - 3\mu_3 $$
+  
+  
+  - Simplifying with contrasts
+    - Definition: let $\theta_1$,...,$\theta_j$ be a set of parameters and $c_1$,...$c_j$ be known constants. Then:
+      - $\gamma$ = $\hat{c^T}\hat{\theta}$ = $\sum_{j=1}^J{c_j\theta_j}$
+        - is a contrast if $\sum_{j=1}^J = 0$
+        - We can estimate a contrasts true (but unknown) contrast $\gamma$ with $\theta = \mu$
+        
+        
+    - Finding contrast with first hypothesis test:
+    
+  1.  $$ H_0: \mu_2 = \frac{1}{2}(\mu_1 + \mu_3) vs. H_1: \mu_2 > \frac{1}{2}(\mu_1 + \mu_3)$$
+  
+    - $$\gamma = -\frac{1}{2}\mu_1 + (1)\mu_2 - \frac{1}{2}\mu_3 $$
+    - $$ \hat{c} = (-\frac{1}{2}, 1, -\frac{1}{2}) $$
+      - Note: the c vector just goes in order of the parameters, i.e., $c_1$ corresponds to the constant multiplier of $\mu_1$.
+    - $$ \hat{\mu} = (\mu_1, \mu_2, \mu_3)^T)
+
+- Defining orthogonality for contrasts:
+    - Suppose we have two different contrasts $\gamma_1$ and $\gamma_2$, these contrasts are orthogonal if:
+      - $$\gamma_1 = \sum_{j=1}^J{c_j\theta_j}$$
+      - $$\gamma_2 = \sum_{j=1}^J{a_j\theta_j}$$
+      - $$\sum_{j=1}^J{a_jc_j} = 0$$
+      
+    - Example: from hypotheses 1 and 3 from above:
+      - 1. $$c_1 = (-\frac{1}{2}, 1, -\frac{1}{2})$$
+      - 3. $$c_3 = (-1, 1, 3)$$
+      - $$\sum_{j=1}^3{a_jc_j} = (-1)(-\frac{1}{2}) + (1)(1) + (-\frac{1}{2})(3) = 0 $$
+      
+
+### Planned Comparisons: Hypothesis Testing with Contrasts
+
+Considering:
+$$ H_0: \mu_2 = \frac{1}{2}(\mu_1 + \mu_3) vs. H_1: \mu_2 > \frac{1}{2}(\mu_1 + \mu_3)$$
+Suppose we would like to test the above hypothesis. We need to ensure the 4 criteria are met before we do the test. 
+  - To reiterate, the criteria are:
+    1. State the hypotheses before the test is done
+    2. Full F-test must be statistically significant
+    3. Contrasts must be orthogonal
+    4. No more than J-1 tests.
+
+Given $\hat{\gamma} = -\frac{1}{2}\bar{y_1} + \bar{y_2} - \frac{1}{2}\bar{y_3}$
+  - We are estimating the parameters with the means for the given groups/levels.
+  - $$\mu_{\hat{\gamma}} = E(\hat{\gamma}) = E(-\frac{1}{2}\bar{y_1} + \bar{y_2} - \frac{1}{2}\bar{y_3})$$
+  - But the expectation value of a sample mean is the population mean, meaning that:
+  $$\mu_{\hat{\gamma}} = -\frac{1}{2}\mu_1 + \mu_2 - \frac{1}{2}\mu_3 $$
+  - Which just is $\gamma$, which means that our estimator is unbiased.
+  
+  - Estimating the Variance
+  $$\sigma_{\hat{\gamma}}^2 = Var(\hat{\gamma}) = Var(-\frac{1}{2}\bar{y_1} + \bar{y_2} - \frac{1}{2}\bar{y_3})$$
+    - Noting that $$Var(aY_1 +- bY_2) = a^2Var(Y_1) + b^2Var(Y_2)$$
+    - We end up with:
+    
+    $$\sigma_{\hat{\gamma}}^2 = \sigma^2(\frac{1}{4n_1} + \frac{1}{n_2} + \frac{1}{4n_3})$$
+    $$ \widehat{\sigma}^2 = \frac{RSS}{n-J}$$
+  $$ \sigma_{\hat{\gamma}}^2 = \widehat{\sigma}^2(\frac{1}{4n_1} + \frac{1}{n_2} + \frac{1}{4n_3}) $$
+  
+      - Therefore: 
+        $$\widehat{\gamma} \, \textit{ iid } \, N(\mu_{\gamma}, \sigma_{\gamma}^2)$$
+      - and thus:
+      $$ t = \frac{\widehat{\gamma}-\gamma}{\widehat{\sigma_{\gamma}}} \, \textit{iid} \, t_{n-J}$$
+        
+### Post hoc Comparisons
+
+- Comparisons in one-way ANOVA:
+  - Planned Comparisons -> Assumptions + contrasts
+  - Post hoc Comparisons -> Mult. comparison corrections (Tukey  HSD + Bonferroni)
+
+  - Compare:
+    - $H_0$: $\mu_j = \mu_k$ vs. $H_1$: $\mu_j \neq \mu_k$
+
+- Assumptions
+  1. Observations are independent
+  2. The response is normally distributed
+  3. The variance across observations is constant
+  
+  Choose two sample means where $\bar{Y_j}$ > $\bar{Y_k}$, noting these are estimators for $\mu_j, \mu_k$
+  
+  - Tukey method
+  
+  
+### Tukey HSD
+  $$q_{j,k} = \frac{\bar{Y_j} - \bar{Y_k}}{\sqrt{\widehat{\sigma}^2/r}}$$
+    - $q_{j,k}$ is test statistic for difference between means. 
+    - r is the # of replications, which is the number of units in each of the individual groups.
+    - Proportional to SRD(J, n - J) (studentized range distribution)
+    - Note that $\widehat{\sigma}^2$ is $\frac{RSS}{n-J}$
+    
+    - Procedure:
+      1. Choose an $\alpha$.
+      2. Compute $q_{j,k}$ for each pair of means, where $\bar{Y_j}$ > $\bar{Y_k}$
+      3. Compute the p-values for each $q_{j,k}$:
+        $$p_{j,k} = 1 - F_{J,n-J}(q_{j,k})$$
+        - in R: 1 - ptukey()
+      4. Make decision based on alpha level specified.
+      
+    - $\textbf{TukeyHSD()}$
+      - Fit a one-way ANOVA using the regression method
+      - Compute and store the ANOVA table using av = aov(lmod)
+      - Run TukeyHSD(av)
+      
+    - "Manually"
+      n = length(esp$foamIndx)
+      J = length(unique(esp$method)) 
+      rss = sum(resid(lmod)^2)
+      sighat = sqrt(rss/n-J))
+      qjk = abs(diff)/(sighat/J)
+      p = round(1-ptukey(qjk, nmeans=J, df=n-J), 7)
+      cbind(p)
+      
+### Bonferroni
+
+  $$ p < \alpha = \frac{\alpha_{fw}}{m}$$
+  - Where $\alpha$ is the significance level for each of the individual tests. 
+    - i.e., if there are 10 tests, and we want $\alpha_{fw}$ = 0.05, each individual test will have an $\alpha = 0.05/10$
+    - P(at least one type I error) = 1 - P(no type I errors)
+    - $$P = 1 - (1 - \frac{\alpha_{fw}}{m})^m$$
+      
+      
+    - Test statistic is: diff/se
+    - p_adj = df$p*m
+    - p_adj2 = p.adjust(p,"bonferroni")
+    
+    -library(multcomp)
+    - pairwise.t.test(esp$foamIndx, esp$method, p.adjust.method = "bonferroni", conf.level = 0.95)
+      
+- No agreed upon method for adjusting, Bonferroni is known to be rather conservative for large m's
+
+
+### Type II error and Power in the ANOVA context
+- Power depends on:
+  1. Sample size (we have control)
+  2. Effect size (do not have control)
+  3. Variability (do not have control often)
+  4. Significance level (we have control)
+- Power analyses can be used for:
+  1. Estimating the power of a study design (alpha, H1, sigma2, n)
+  2. Estimating the sample/replication size needed to achieve a specified power.
+- Types of power analyses
+  1. Prospective
+    - Used for specifying variables and getting power
+    - Specifying 3 of the variables and determining the fourth to achieve a desired power.
+  2. Retrospective
+    - largely unjustified, should not do them.
+- In R:
+  - power.anova.test(), can only specify three.
+- Example (note these quantities are "educated guesses")
+  - groupmeans = c(30,40,35)
+  - withInVar = 8^2
+  - power.anova.test(groups = length(groupmeans), between.var = var(groupmeans), within.var = 8^2, power = NULL, sig.level = 0.05, n = 9)
+    - note the n value is the number in each group (replications)
+    - This would yield a power of 0.59886468
+  - If we wanted a power of 0.7, we would specify in the above power = 0.7 and n = NULL
+  
+- Note we do not use the sample means because that would be a RETROSPECTIVE power analysis. Study estimates are noisy, and often overestimations.
+
+$\alpha$
