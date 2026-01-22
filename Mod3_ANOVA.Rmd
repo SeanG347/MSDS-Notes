@@ -1,0 +1,162 @@
+---
+title: "Mod3_ANOVA"
+author: "Sean Guglietti"
+date: "2025-10-09"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Module 3 - Two-Way ANOVA
+
+## Motivation
+
+- Module Example:
+    - E-reader study: researchers set out to ask whether reading speed, a continuous variable, differed across different electronic paper displays
+      - 1. Reading time: measured in seconds (response)
+      - 2. Device type: factor with three levels/devices (Sony, Kindle, iRex)
+      - 3. Lighting condition: factor with four levels/lighting conditions, measured in Lux
+    - Important questions:
+      - Are the effects of device type significant?
+      - Are the effects of lighting conditions significant?
+      - Are there interactions between device type and lighting conditions.
+    - Notes:
+      - If we set up two studies to do one-way ANOVA twice, we need many more participants, also more resource intensive as we may need more money to get the participants. Also impossible to get the interaction effects between device type and lighting conditions. This is why two-way ANOVA is important to understand all the individual effects but also the interaction effects.
+      - $\textbf{Crossed vs. Nested factors}$
+        - Two factors are crossed if there is at least one observation in every factor level combination.
+        - Factor A is nested within factor B when each level of A occurs within only one level of B. All combinations of levels are not represented.
+        
+  $\textbf{Generally:}$
+  - Important questions: given factor $\tau$ and factor $\alpha$;
+    - Are the effects of $\tau$ significant?
+    - Are the effects of $\alpha$ significant?
+    - Are there interactions between $\tau$ and $\alpha$?
+  $\textbf{Balance}$
+    - A two-way ANOVA is $\textbf{balanced}$ if each factor level combination contains the same number of replications, otherwise the two-way ANOVA is $\textbf{unbalanced}$.
+    
+    
+    
+## The two-way ANOVA model
+  - Suppose that we have a factor $\tau_j$ occuring at j = 1,...,J levels, and another factor, $\alpha_k$, at k = 1,...,K levels. Here are two equivalent formulations of the two-way ANOVA model:
+  - $\textbf{Means Model}$
+    - $y_{ijk}$ = $\mu_jk$ + $\epsilon_{ijk}$
+      - $\mu_jk$ is the mean of the units in the j level of the factor $\tau$ and the k level of the factor $\alpha$.
+      - $\epsilon_{ijk}$ ~ N(0,$\sigma^2$)
+  - $\textbf{Effects Model}$
+    - $y_{ijk}$ = $\mu$ + $\tau_j$ + $\alpha_k$ + $\epsilon_{ijk}$
+      - $\mu$ here is the "grand mean", or the mean of the continuous response over the entire population.
+      - $\tau_j$ is the true difference between the grand mean and the mean of the response specifically for units in the jth level of factor $\tau$, holding the $\alpha$ factor constant.
+      - $\alpha_k$ is the true difference between the grand mean and the mean of the response specifically for units in the jth level of factor $\alpha$, holding the $\tau$ factor constant.
+        - $\textbf{Note:}$
+          - $\sum{\tau_j}$ = $\sum{\alpha_k}$ = 0
+            - This is so that the matrix is invertible.
+  - Definitions:
+    - $\textbf{Replication}$ in the two-way ANOVA setting, is the repeated observation under the same combination of factor levels.
+    - A $\textbf{full factorial design}$ is a study design that includes all possible combinations of the levels of the factors at least once.
+    - A two-way ANOVA is $\textbf{balanced}$ if each factor level combination contains the same number of replications.
+      
+
+## The two-way ANOVA model as a Linear Regression Model
+
+  - As we did in the one-way ANOVA, we will create dummy variables for each factor.
+    - Suppose factor $\tau$ had three levels, and factor $\alpha$ had 2 levels:
+      - We can, in R, create the model with:
+        - response $\sim$ factor1 + factor2
+    - We will have, for each factor with J levels, J-1 indicators
+  - $\textbf{Formulation}$
+    $$ Y_i = \beta_0 + \beta_1\tau_{i,2} + \beta_2\tau_{i,3} + \beta_3\alpha_{i,2} + \epsilon_i$$
+    - Note that: $\tau_{i,2}$ is 0 if the ith unit is not in the 2nd level of the factor $\tau$, this follows for $\alpha_{i,2}$
+    - $\textbf{Model Reductions:}$
+      - $\mu_{1,1}$ = $\beta_0$
+      - $\mu_{1,2}$ = $\beta_0 + \beta_1$
+      - $\mu_{1,3}$ = $\beta_0 + \beta_2$
+      - $\mu_{2,1}$ = $\beta_0 + \beta_3$
+      - $\mu_{2,2}$ = $\beta_0 + \beta_1 + \beta_3$
+      - $\mu_{2,3}$ = $\beta_0 + \beta_2 + \beta_3$
+      
+      
+## Interaction Terms in the two-way ANOVA model: Definitions and Visualizations
+
+  - Adding to an effects model:
+    - $$ Y_{ijk} = \mu + \tau_j + \alpha_k + (\tau\alpha)_{jk} + \epsilon_{ijk}$$
+      - $\textbf{If interaction term significant:}$
+        - Can't easily interpret "main effects", because relationship between $\tau$ and the response differs over different levels of $\alpha$, isn't a "main effect"
+          - Have to 
+          
+  - Example: $\textbf{Denim Study}$
+    - Edge Abrasion score: Lower scores mean higher damage (response)
+    - Laundry cycles: a factor with three levels: Control (zero launderings), 5 launderings, and 25 launderings.
+    - Denim treatment: a factor with three levels: Pre-washed, Stone-washed, and Enzyme washed.
+  
+  - Interpreting interaction plots:
+    - Distance between points - Change in mean of response doesn't change for different levels? -> likely no interaction term. 
+    - Growing distance between mean of response? -> likely interaction. Think trumpeting. 
+    - If trends are completely changed as going through factor levels -> likely interaction.
+    - Synergistic interactions: Differences between true and false (factor B) grows, as we go through levels of factor A. 
+  - Interpreting Example plot:
+    - Lines are parallel -> means that regardless of the factor that distinguishes the lines, the X variable (in the washing example, the cycle factor) has the same effect on both groups -> no interaction.
+    - Third line is not parallel: means we need to investigate more to see if there is any statistical or practical interactive effects.
+    
+    
+## Interactions in the Two-way ANOVA model: Formal tests
+
+  - If $\tau$ has three levels, and $\alpha$ has two levels, regression model becomes:
+    $$ Y_i = \beta_0 + \beta_1\tau_{i,2} + \beta_2\tau_{i,3} + \beta_3\alpha_{i,2} + \beta_4\tau_{i,2}\alpha_{i,2} + \beta_5\tau_{i,3}\alpha_{i,2} + \epsilon{i} $$
+    - i.e., If $\beta_4$ is not 0, then there is an interaction effect for factors (and levels) $\tau$ (level 2)and $\alpha$ (level 2)
+    - "Effects model" representation:
+      - $(\tau\alpha)_{jk}$
+    - Regression model representation:
+      - $\beta_4\tau_{i,2}\alpha_{i,2} + \beta_5\tau_{i,3}\alpha_{i,2}$
+  - Testing for interactions:
+    - F-test:
+      - Full model: 
+       $$ Y_i = \beta_0 + \beta_1\tau_{i,2} + \beta_2\tau_{i,3} + \beta_3\alpha_{i,2} + \beta_4\tau_{i,2}\alpha_{i,2} + \beta_5\tau_{i,3}\alpha_{i,2} + \epsilon{i} $$
+      - Reduced model:
+       $$ Y_i = \beta_0 + \beta_1\tau_{i,2} + \beta_2\tau_{i,3} + \beta_3\alpha_{i,2} + \epsilon{i} $$
+    - To do in R:
+      - twoway_interact = full model, twoway = reduced model
+      - twoway_interact = lm(response ~ factor1 + factor2 + factor1:factor2)
+      - twoway = lm(response~ factor1 + factor2)
+      - anova(twoway, twoway_interact)
+        - Conducts F-test, if p-value less than $\alpha$, we can reject the null hypothesis (which is that the reduced model is sufficient for explainability).
+    - Interpreting results of test:
+      - No statistically significant interaction? Fit the two-way ANOVA model without an interation term and interpret the main effects
+      - Statistically significant interaction? Include the interaction term in the model. No easy interpretation.                                                                                                                                                         
+    
+    
+## Two-way ANOVA Hypothesis testing (no interaction)
+  - With:
+    $$ Y_{ijk} = \mu + \tau_j + \alpha_k + \epsilon_{ijk}$$
+  - Goals for planned comparisons:
+    1. Testing marginal effects
+    2. Testing combined effects
+    - Conditions for planned tests:
+      1. Pre-specified hypotheses
+      2. Full F-test first
+      3. Orthogonal contrasts
+      4. Number of contrasts <= degrees of freedom
+    - Example contrast:
+    $$ H_0 : \mu_{2.} - \mu_{1.} = 0 $$
+    $$ H_0: (\mu + \tau_2) - (\mu + \tau_1)$$
+    - $\textbf{Notes:}$
+      - $\mu_{2.}$ corresponds to the difference between the grand mean and the mean of the response in the 2nd level of the first factor, which is $\tau$. The period after the 2 implies that we are averaging over all levels of the second factor $\alpha$
+      - Contrast:
+        - $\gamma$ = $\mu_{2.} - \mu_{1.}$
+      - Estimate of the contrast:
+        - $\widehat{\gamma}$ = $\bar{Y_{2.}} - \bar{Y_{1.}}$
+        - $\widehat{\gamma} \sim N(\mu_{\gamma}, \sigma_{gamma}^2)$
+      - Test stat:
+        $$ t = \frac{\widehat{\gamma} - \gamma}{\widehat{\sigma_{\gamma}}} \sim t_{n-J}$$
+          - $\widehat{\sigma_{\gamma}} = \frac{RSS}{n-J}$
+      - In R:
+        - library(lsmeans)
+        - pairs(lsmeans(twowaymodel, "factor"), adjust = "none")
+        
+  - $\textbf{Post Hoc}$
+    - From above: pairs(lsmeans(twowaymodel, "factor"), adjust = "bonferroni")
+      - You just change the "adjust" parameter to bonferroni 
+    - Tukey
+      - TukeyHSD(aov(twowaymodel), which="factor_name")
+        - in denim example, factor_name could be cycle or treatment
