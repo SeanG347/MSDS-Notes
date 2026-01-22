@@ -1,0 +1,177 @@
+---
+title: "Mod4_ANOVA"
+author: "Sean Guglietti"
+date: "2025-10-10"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Module 4: Experimental Design, Basic Concepts and Designs
+
+- Goals:
+  - Understand and study important experimental design concepts that allow us to make strong causal claims 
+  - Research examples
+  
+### Experimental Design and Causality
+  - Not really agreed upon definition of "causality"
+    - What does it mean that "the rain $\textit{rain}$ caused the grass to get wet"
+      - $\textit{Probabilistic Causation:}$
+        - C causes E if P(E|C) > P(E)
+      - $\textit{Counterfactual Causation:}$
+        - C causes E if, in the absence of C, E would not have occured (or would have been less likely to occur)
+        - In background of a lot of statistics.
+      - $\textit{Structural Equation Causation:}$
+        - C causes E must be evaluated relative to a "structural equation model"
+          - Example: rain causing the grass to be wet has to be evaluated in terms of lots of background factors that would be evaluated with some structural equation model.
+    - Conditions for establishing causation
+      - Empirical association
+        - Correlation between variables (ANOVA, Regression model, tests)
+      - Correct temporal relationship 
+        - Predictor has to come before change in response (in time)
+      - Nonspuriousness
+        - Need relationship between predictor and response to not be influenced by a third factor, need to isolate actual relationship between predictor and response.
+      - Desireable to know $\textit{causal mechanism}$ of how the causal relationship occurs.
+      
+### Experimental Design
+  - Treatment Design
+    - How many treatments in our design?
+    - How many treatment levels?
+    - Relation among treatments? Are they crossed/factorial or nested?
+    - Fixed or random effects?
+    - Continuous covariates? (ANCOVA vs. ANOVA)
+  - Randomization Design
+    - How to assign treatments to experimental units?
+      - CRD? RCBD? (Completely Randomized Design vs. Randomized Complete Block Design)
+    - Sample units within experimental units? 
+    - Replications? Repeated measurements?
+    
+  - Experimental unit vs. Sample unit
+    - Recall: an experiment deliberately imposes a treatment on a group of units in the interest of observing a response
+      - An experimental unit: is an entity to which a treatment is applied. Examples are people, animals, plants, tweets, etc.
+      - A sampling/observational unit is an entity on which the response is measured. Not necessarily the same as an experimental unit.
+        - Example:
+          - Company X performs experiment to compare four ad methods to improve click rates. Four social media platforms are chosen to host the campaign, each of which will show the ad to 1000 internet users. Experimenters randomly assign each campaign to each platform
+            - Experimental unit: The PLATFORMS are the experimental units.
+            - Sample unit: the internet users
+  
+    
+    
+### The Completely Randomized Design
+
+- In a randomized experiment, experimental units are assigned to an experimental group by a chance process (e.g., by assigning a Bernoulli random number to each unit)
+  - Randomization minimizes any potential biases or judgments. There are several variations of randomized experimental designs.
+$\textbf{Definition:}$ In a $\textit{completely randomized design (CRD)}$, treatment levels are assigned to each experimental unit so that each experimental unit had the same chance of receiving any treatment.
+
+  - CRD helps with the conditions for Establishing Causation:
+    - Empirical association: ANOVA model (or some model) can help us understand if an effect is likely to be present in the population
+    - Correct temporal relationship (just assign treatment before response)
+    - Nonspuriousness: If treatments were not assigned in a completely random way, some treatments may be assigned systematically, which leads to the problem of: is the difference caused by the treatment? or due to factors present in the group that was chosen systematically?
+    
+  - Advantages of a CRD
+    - Flexible
+    - Simple analysis (ANOVA)
+    - # of units within each treatment need not be the same
+    - Larger # of degrees of freedom
+  - Disadvantages of a CRD:
+    - Inappropriate for heterogeneous experimental units
+      - I.e., if classrooms were our experimental unit, and we found that many of the classrooms had drastically different means for example, then those are heterogeneous experimental units.
+    - Homogeneous experimental units are often difficult to find
+    - Best suited for small # of treatments
+    
+### The Randomized Complete Block Design
+
+- $\textbf{Definition:}$ In a randomized complete block design (RCBD), units are first divided into homogeneous blocks before they are randomly assigned to a treatment group. This is beneficial when an experimenter is aware of specific differences among groups of units within an experimental group.
+  - Example: Advertising example:
+    - Block 1 -> Social media platform 1
+    - Block 2 -> Social media platform 2
+    - Block 3 -> Social media platform 3
+      - Units within each block get randomly assigned an ad campaign
+  - Block Designs (when to block)
+    - Nuisance variables -> Can be (Known, Unknown), and (Controllable, Uncontrollable).
+      - -> (Known, Controllable) -> Block Design
+      - -> (Unknown, Controllable) -> Not possible lol
+      - -> (Known, Uncontrollable) -> ANCOVA (measure and adjust for the uncontrollable nuisance variable, example is when the ad is seen, we can still measure it, and then add time of day predictor to ANCOVA model)
+      - -> (Unknown, Uncontrollable) -> Completely Randomized Design 
+    - General rule: $\textit{"Block what you can; Randomize what you cannot"}$
+  - $\textbf{Note:}$ 
+    - If Design is a CRD -> One-way ANOVA
+    - If design is a RCBD -> Two-way ANOVA
+    
+- Mathematical model:
+  - The RCBD:
+    - Let $\tau$ be a treatment factor with J levels, and $\alpha$ a blocking factor with K levels. Recall that the two-way ANOVA model is:
+      $$y_{ijk} = \mu + \tau_j + \alpha_k + \epsilon_{ijk} $$
+      - $\alpha_k$ is the true difference between grand mean and mean of the response for the kth level of the blocking factor, holding the treatment factor constant.
+      - Treatment is randomly assigned to the blocks.
+    
+### The Randomized Complete Block Design: Hypothesis Testing
+
+ - R considers following tests:
+  - Neither the blocking factor nor the treatment factor is statistically significant
+    - $H_0$ : $Y_{ijk} = \mu + \epsilon_{ijk}$
+    - $H_1$ : $Y_{ijk} = \mu + \alpha_k + \epsilon_{ijk}$
+  - Whether the treatment factor is statistically significant, given the blocking factor:
+    - $H_0$ : $Y_{ijk} = \mu + \alpha_k + \epsilon_{ijk}$
+    - $H_1$ : $Y_{ijk} = \mu + \alpha_k + \tau_j + \epsilon_{ijk}$
+  - Table:
+    - Rows: Block, Treatment, Residuals, Total
+    - Columns: df, SS, MSE, F Stat, p-value
+  - Interpreting:
+    - First row: If difference in mean is statistically significant for the blocking factors
+      - We know that there should be differences, hence why we blocked
+    - Second row: If difference in mean is statistically significant for treatment factor
+      - If p-value is less than alpha, then there is evidence that there are differences for different treatment groups.
+      
+  - RCBD and causality:
+    - If assumptions are met (randomized, assigned treatments to blocks randomly) it may be reasonable to draw causal claims for treatment, but not for blocks, as we do not assign blocking factor at random.
+
+    
+### The Factorial Design
+
+- If you have two or more treatments (many levels), and blocking not necessary -> Factorial design -> Multi-way ANOVA 
+
+  - Example: Online retailer:
+  - 1. Revenue (response)
+  - 2. Website color scheme
+  - 3. Product display
+  - 4. Outside advertisements (advertising other products)
+- OFAT vs. designed experiments:
+  - OFAT experiments often require more resources, are less precise, and cannot detect or estimate interactions.
+  - A factorial design is an experimental design that consists of two or more factors
+  - A Fully Factorial Design is a factorial design where experimental units take on all possible combinations of these levels across all factors
+- A $J^p \textbf{factorial design}$ is a factorial design that consists of p factors each with J levels/groups.
+  - Example:
+    - $2^3 x 3 x 4^2$
+      - 2^3 has three factors with two levels, 3 has one factor with 3 levels, and 4^2 has 2 factors with four levels.
+  - Important questions:
+    - Are the effects of $\tau$ significant?
+    - Are the effects of $\alpha$ significant?
+    - Are there interactions between $\tau$ and $\alpha$?
+      - Can answer by fit a two-way ANOVA model with an interaction model (which we will get rid of should it be insignificant).
+    
+    
+
+### Further issues in Experimental Design
+
+  - Factors $\tau$ and $\alpha$ are $\textbf{crossed}$ if every level of $\tau$ occurs within every level of $\alpha$ (and vice versa)
+  - Factor $\tau$ is $\textbf{nested}$ within $\alpha$ when each level of $\tau$ occurs within only one level of $\alpha$
+  - Fixed effects vs. Random effects
+    - Assumed levels of treatment factors were fixed (the factors chosen for the experiment were the only treatments of interest). Not all statistic models have that.
+      - Example: E-reader study - Reading time ~ Device type + Lighting condition
+        - In this example we limited the devices to three, if they were chosen at random from the larger population of e-reader devices, then we have a "random effects" design and needs to be modelled with a random effects model.
+  - Balanced vs unbalanced designs
+    - Balanced: Equal observations in each factor
+      - May not be feasible, even if planned for one, may have something come up
+    - Unbalanced: Introduces complications
+  - Multiple blocking factors: Latin squares designs
+
+
+### Ethical Issues in Experimental Design
+
+  -  
+
+
+
