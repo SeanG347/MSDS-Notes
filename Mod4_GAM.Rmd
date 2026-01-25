@@ -1,0 +1,113 @@
+---
+title: "Mod4_GLM"
+author: "Sean Guglietti"
+date: "2025-10-14"
+output: html_document
+---
+
+#General Additive Models
+
+### Motivating GAMs
+
+- General model:
+  $$ Y_i = f(x_{i,1}, ..., x_{i,p}) + \epsilon_i$$
+- Additive mdoel:
+  $$ Y_i = f(x_{i,1}) +...+f(x_{i,p}) + \epsilon_i$$
+- Example:
+  1. $f(x_1,x_2,x_3) = x_1 + x_1^2 + x_2 + x_2^2 + x_1x_2 + sin^2(x_3)$
+    - Not additive because we can't separate the $x_1x_2$ term into functions of just $x_1, and x_2$
+  2. f(x_1,x_2) = $\pi + e^{5x_1} + log(2x_2)$
+    - Additive, define $f_1(x_1) = \pi + e^{5x_1}$ and  $f_2(x_2) = log(2x_2)$
+  3. $f(x_1,x_2,x_3) = 1 + log(0.5x_1^2) -x_2 + x_3$
+    - Additive, clearly made up of functions that can be defined in terms of the individual parameters
+- Fitting a model 
+  - $\hat{f(x)} = \sum_{i=1}^n{\frac{K_H(x-x+i)y_i}{\sum_{i=1}^nK_H(x-x_i)}}$
+    - Weighted averages, but the terms are multivariate kernels. 
+    - H subscript shows that the kernel term depends on the H matrix, which is a positive definite matrix ($H^{-1}$ exists, $H^{1/2}$ exists, $H^{-1/2}$ exists)
+    - H is similar to the bandwidth, has many different variables for the smoothing to be determined
+    - $$K_H(u) = |H|^{-1/2}K(H^{-1/2}u)$$
+      - $K(H^{-1/2})$ is a Kernel, the integral over the inner term = 1, Kernel is always > 0
+  - Visualization becomes difficult because it's in higher dimensions.
+- 
+$$E(Y_i) = \beta_0 + f_1(x_{i,1}) + ... + f_p(x_{i,p})$$
+  - All functions are arbitrary, are additive, and are smooth (has higher order derivatives).
+    - Additive functions are much more flexible.
+    - Additive functions will not do great if there are interaction terms, but we can add new functions that have these correlated functions of more than one parameter, but things get more complicated.
+    
+- Finding the $f_j(x_{i,j})$ term
+  - $$g(\lambda_i) = \beta_0 + \beta_1x_{i,1} + f_2(x_{i,2}) + ... + f_p(x_{i,p}) = log(\lambda_i)$$
+  
+  
+- Example: Ozone data with parameters: (wind, humidity, temp, ibh, dpg, ibt, vis, doy) response: O3
+  - 
+  
+  
+  
+### Generalized Additive Models in R
+
+- Particular: MgCV package
+
+- Data simulation:
+  - $x_1$: Continuous predictor that we will suppose has a nonlinear relationship
+  - $x_2$: Continuous predictor that we will suppose has a linear relationship
+  - $x_3$: a factor with three levels: A, B, C
+- Construct Response:
+  - $\mu_i = E(Y_i) = sin(\pi/2 * x_1) + 3x_2 + x_3$
+- If we fit a linear model with the three predictors, we get a pretty terrible fit. If we fit the relationship as the data was simulated (obviously in practice we won't know the exact relationship, but check it out pimp)
+  - lm(y ~ sin(pi/2*x1) + x2 + x3) 
+    - will get very, very good results(0.9936 adjusted R2)
+    
+- Fitting the GAM
+  - library(mgcv)
+  - modGAM = gam(y ~ s(x1) + x2 + x3,data = d, family = gaussian)
+    - s(x1) makes the gam function try to find a function for it, based on the family specified, default is gaussian. Putting + x2 in it allows it to interpret x2 linearly
+    
+    
+### Inference with Generalized Additive Models: Effective Degrees of Freedom
+
+- From standard linear regression:
+  $$ RSS = \sum_{i=1}^n{(Y_i - \hat{Y_i})^2}$$
+  - Has n - (p + 1) degrees of freedom
+  - When conducting t test for individual predictor or F-test for full model vs. null model, we relied on the degrees of freedom. $\textit{We thus need something analagous for the GAMs}$
+    - They exist but the terms are much more complex for the smooth terms.
+      - Functions not specified parametrically, hard to determine number of parameters in a GAM.
+        - Something analagous: 
+          - $\textbf{Effective degrees of freedom}$, abbreviated as edf, found with the trace of a generalization of the hat model 
+          - Interpretation:
+            - If edf is "close to" 1, then that term should enter linearly into the model
+              - i.e., If you input gam(y~s(x1)...) and get edf $\sim$ 1, then you could have simply put gam(y ~ x1).
+            - If edf is 6, and you look at plots and see that there's some clear nonlinearity (confidence bands can't contain a linear relation), then you can be pretty confident it's doing a good job.
+            - Should be taken lightly, not completely reliable for inference, not direcly analagous to degrees of freedom.
+  - Recall the hat matrix:
+    - $H = X(X^TX)^{-1}X^T$
+  - Then:
+    - tr(H) = p+1, where tr(H) is defined as follows:
+      $$tr(H) = \sum_{i=1}^n{H_{ii}}$$
+
+
+### Inference with Generalized Additive Models: Tests
+
+- There are hypothesis tests for GAMs in the summaries in R.
+  - Again, not definitive, rough ways to assess the predictor eligibility/importance
+- Hypothesis tests (F-tests) in summary():
+  - $H_0$: the given smooth term is zero
+  - $H_1$: the given smooth term is not zero
+- Goodness of fit:
+  - Deviance explained: Analog for $R^2$, $1 - \frac{RD}{ND}$, RD is residual deviance, ND is null deviance tells us about percentage of variance in response that is explained by the model (number between 0 and 1)
+  - $R_a^2$: tries to adjust for sample size.
+
+
+
+### Generalized Additive Models in R: Inference and Interpretation
+
+- From previous example with three predictors, one of which sinusoidal, one linear, and one three-level.
+  - Train-Test split, Fit the model
+    - Summary:
+      - "Parametric Coefficients": can interpret the factor in the same ways as we did in linear regression, as these are linear predictors.
+        - P-values can be interpreted in the same way as well
+    - Interpretation of s(x1):
+      - plot(g), marginal relationship between s(x1) and x1 shows the way it impacts the overall response holding other factors constant.
+        - Very low p-values for smooth term tells us that the predictor should enter the model in some way.
+        - High edf suggests that the fit should be nonlinear
+    - If we fit the model with gam(y ~ s(x1) + s(x2) + x3), then we likely will get a low edf (we get 2.4), and in the plot for the function it is clear that the relationship is linear.
+      
