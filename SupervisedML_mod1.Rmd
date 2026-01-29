@@ -1,0 +1,160 @@
+---
+title: "ML_Supervised_Mod1"
+author: "Sean G"
+date: "2026-01-16"
+output: html_document
+---
+
+# Module 1 - Supervised learning
+
+### Supervised vs. Unsupervised Learning
+
+ - What is supervised learning?
+  - Learning wih a "teacher or supervisor"
+    - Input variables (features/predictors) -> output variable (response/label)
+    - Algorithm learns to map inputs to outputs
+    - Training data includes known, correct answers
+  - Example:
+    - Dataset of workers with age, education, experience (predictors) and wage (response)
+      - Mapping/creating a relationship between predictors and wage.
+  - Types of supervised learning
+    - Regression
+      - Predict continuous values (i.e., wage prediction, house price, temperature)
+    - Classification
+      - Predict categorical outcomes (i.e., email spam detection, disease diagnosis, customer churn prediction)
+    - In both cases there are labelled records to learn from.
+  - What is unsupervised learning?
+    - Learning without explicit guidance
+      - No labeled outputs
+      - Goal is to discover structure or patterns in data
+      - Cannot directly measure right or wrong.
+    - Example:
+      - Clustering (k-means, medoids, etc.)
+      - Customer purchase behaviour (unlabelled)
+        - Average purchase amount and apurchase frequency (per month)
+          - Groups of people who buy unfrequently with low values, groups who buy a lot but low average cost, and people who make infrequent, but large purchases. 
+          - These groups can be clustered/labelled into "bargain hunters", "regular shoppers", "premium buyers". Companies can then send specific offers to those groups (i.e., premium offers to premium buyers)
+      - Discovering evolutionary relationships from genetic data
+        - Genetic distance and species, groups the different species.
+        
+  - Key differences
+    - Supervised: Clear goal: predict output accurately. Success measured by prediction error. Requires labelled data. 
+    - Unsupervised: Exploratory goal: discover structure, success more subjective, no labelled data needed
+    
+    
+### Regression vs. Classification
+
+  - Regression: Predicts continuous numerical values
+  - Evaluating regression models
+    - Metrics:
+      - Mean Squared Error: Average of squared differences between predictions and actual values
+      - Mean Absolute Error: Average of absolute differences between predictions and actual values
+      - Root Mean Squared Error: Square root of MSE (in same units)
+        - Lower values indicate better performance for all metrics.
+  - Classification: Predicts discrete categories/classes
+    - Binary Classification: two possible classes (i.e., spam v. not spam)
+    - Multi-class classification (ex. animal image detection, movie genre)
+    - $\textbf{Metrics}$
+      - Accuracy: Percentage of correctly classified instances
+      - Precision: Proportion of positive identifications that were actually correct
+      - Recall: Proportion of actual positives that were correctly identified
+      - F1 Score: Harmonic mean of precision and recall
+        - Higher values indicate better performance
+  - Algorithms for both tasks
+    - K-Nearest neighbors (KNN)
+      - Regression: average of the values of K nearest neighbors
+      - Classification: vote on class based on K nearest neighbors
+    - Decision trees
+      - Regression: Predict a number at each leaf
+      - Classification: predict a class at each leaf
+  
+  
+### Model Accuracy and Bias-Variance Tradeoff
+
+  - Understanding model error
+    - Example model: $ Price = \beta_0 + \beta_1 * SqFt$, For price of a house based on square footage
+  - What makes a good model
+    - Good performance on training $\textbf{AND}$ unseen data (generalization)
+      - Balance between capturing patterns in data and avoiding noise/random fluctuations
+  - Bias-Variance tradeoff
+    - Bias: Error from incorrect assumptions
+    - Variance: Error from sensitivity to fluctuations
+    - Tradeoff: Reducing one often increasing the other
+    - Goal: Find the sweet spot with minimal total error.
+  - Understanding Bias
+    - High Bias: Moel makes strong assumptions
+      - Leads to underfitting (not fitting the real trends in the data)
+        - Ex: linear model for non-linear data
+      - Symptoms: 
+        - Poor performance on training and test data
+  - Understanding Variance
+    - High Variance: Model is too sensitive to training data
+    - leads to overfitting
+      - Ex: Complex polynomial fitting random noise
+      - Symptoms:
+        - Excellent training data performance but poor performance on test data.
+  - When model Complexity is low, we have high bias and low variance as we make a bunch of assumptions. When complexity is high we have low bias but high variance because we are risking fitting noise for example. We want model that has a balanced complexity, for the balance between bias and variance
+    - Bullseye analogy
+      - High Bias, Low Variance: Consistent but inaccurate shots (systematic error)
+      - Low Bias, High Variance: Scattered shots with no systematic error
+      - Low Bias, Low Variance: Accurate and precise 
+  - Balancing the tradeoff
+    - Model complexity directly affects the tradeoff
+      - Simple models -> high bias, low variance
+      - Complex models -> low bias, high variance
+      - Ways to find balance: 
+        - Cross-validation
+        - Regularization techniques
+        - Ensemble methods
+  - Total error decomposition
+    - Total Error = $Bias^2$ + Variance + Irreducible Error 
+      - Bias: how far predictions are from true values
+      - Variance: How much predictions vary
+      - Irreducible error: noise in the problem itself
+      
+      
+### Interpretability vs Complexity 
+  - Interpretability: 
+    - Ability to understand and explain how a model makes decisions
+    - Knowing the "why" behind a prediction
+    - Being able to trace the reasoning from input to output
+    - Understanding feature importance and relationships
+  - Complexity
+    - Number of parameters, non-linear relationships, etc.
+    - Flexibility: ability to fit intricate patterns in the data
+    - More complex models can capture nuanced relationships
+    - But they often become harder to interpret
+  - Trade-offs
+    - More complex means it can model more complex trends, but as they get more complex they are less interpretable
+  - Why it matters
+    - Trust and transparency for stakeholders
+    - Debugging
+    - Regulatory compliance (some fields require explainable decisions)
+    - Knowledge discovery (learning about the domain from the model itself)
+    - Ethical considerations (avoiding bias)
+  - When to prioritize interpretability
+    - High-stakes decisions (medical, criminal justice)
+    - Regulatory requirements (financial services, healthcare)
+    - Need for insights (understanding factors driving outcomes)
+    - Building trust
+    - Detecting bias
+  - When to prioritize performance/complexity
+    - Low stakes predictions - Product recs, weather forecasting
+    - Accuracy is paramount - competitive scenarios where small improvements
+    - Underlying relationship is highly complex: natural language, images
+    - Large amounts of data: Taking advantage of patterns human can't see 
+    - Post-hoc explanations available: When global interpretability isn't required
+  - The spectrum of interpretability
+    - Glass box models: Linear/logistic regression, small decision trees
+    - Grey box models: Random forests, gradient boosting, shallow neural networks
+    - Black box models: Deep neural networks, complex ensembles
+    - Post-hoc explanation tools: LIME, SHAP values, partial dependence plots
+  - Practical tips for balancing the trade-off 
+    - Start simple, add complexity incrementally 
+    - Use domain knowledge to create interpretable features
+    - Consider using interpretable models for exploration
+    - Use complex models for prediction when stakes are low
+    - Hybrid approach: interpretable model + black-box "advisor"
+    - Employ post-hoc explanation techniques for complex models
+      
+      
